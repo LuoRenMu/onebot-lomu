@@ -12,7 +12,6 @@ import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalRet
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalReturnMatchesById
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.tier.EternalReturnTiers
 import cn.luorenmu.action.request.EternalReturnRequestData
-import cn.luorenmu.common.extensions.getUrlIfIndexExists
 import cn.luorenmu.common.utils.FreeMarkerUtils
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.common.utils.RedisUtils
@@ -71,23 +70,26 @@ class EternalReturnFindPlayerRender(
 
     suspend fun pageRender(nickname: String): EternalReturnRender {
         val currentSeason = eternalReturnRequestData.currentSeason()?.currentSeason
+
         val currentSeasonKey = currentSeason?.key ?: run {
             throw LoMuBotException("无法获取当前赛季")
         }
         val profile = eternalReturnRequestData.profile(nickname, currentSeasonKey)
         val tiers = eternalReturnRequestData.tiers()
-        // 最新活跃赛季 由于过去赛季的api数据不同 因此暂时不支持处理
-        //val season =
-        //    eternalReturnRequestData.currentSeason()!!.seasons.first { seasons -> seasons.id == profile.playerSeasons.maxBy { it.seasonId }.seasonId }
         val matches = eternalReturnRequestData.matches(nickname, currentSeasonKey)
+
         if (profile == null || tiers == null || matches == null) {
             throw LoMuBotException("多次尝试仍然无法从dak.gg获取数据")
         }
 
+
+        if (matches.matches.isEmpty()) {
+            throw LoMuBotException("该玩家当前赛季不存在任何数据 -> $nickname")
+        }
         //必要数据由left优先生成并渲染
         val eternalReturnRender = pageLeftConvert(profile, tiers, currentSeason)
         pageRightConvert(matches, eternalReturnRender)
-        eternalReturnRender.lomuRating = matchRating(matches)
+        eternalReturnRender.rating = matchRating(matches)
         return eternalReturnRender
 
     }
@@ -96,7 +98,7 @@ class EternalReturnFindPlayerRender(
     suspend fun pageLeftConvert(
         profile: EternalReturnProfile,
         tiers: EternalReturnTiers,
-        season: EternalReturnSeasons?,
+        season: EternalReturnSeasons,
     ): EternalReturnRender {
         val player = profile.player
         val playerSeasons = profile.playerSeasons
@@ -109,7 +111,7 @@ class EternalReturnFindPlayerRender(
         val eternalReturnPlayerData = EternalReturnPlayerData().apply {
             if (playerSeasons.isNotEmpty()) {
                 // 选取最新的段位信息 并且装配部分数据
-                playerSeasons.firstOrNull { it.seasonId == season?.id }?.let { data ->
+                playerSeasons.firstOrNull { it.seasonId == season.id }?.let { data ->
                     val currentTier = data.tierId.let { tierID -> tiers.tiers.first { it.id == tierID } }
                     // example: 1234RP or 段位鉴定中.
                     if (data.mmr != 0) {
@@ -238,7 +240,7 @@ class EternalReturnFindPlayerRender(
             profileImageUrl,
             mmrStats = playerMMRStats,
             recentPlayers = recentPlays,
-            season = season?.name ?: "未知赛季",
+            season = season.name,
             playTime = playTime,
             characterUseStats = characterUseStats
         )
@@ -248,8 +250,8 @@ class EternalReturnFindPlayerRender(
         match: EternalReturnMatches.Match,
         dateFormatter: DateTimeFormatter,
         teammate: EternalReturnMatchesById?,
-    ): String {
-        val matcherData = EternalReturnRender.EternalReturnPlayerMatchData().apply {
+    ): EternalReturnRender.EternalReturnPlayerMatchData {
+        return EternalReturnRender.EternalReturnPlayerMatchData().apply {
             type = match.matchTypeStr
             rank = if (match.escapeState == 3) 99 else match.gameRank
             gameId = match.gameId.toString()
@@ -290,7 +292,6 @@ class EternalReturnFindPlayerRender(
 
             teamMates = teammateInfos
         }
-        return FreeMarkerUtils.parseData("eternal_return_war_record.ftlh", matcherData)
     }
 
     /**
@@ -358,65 +359,14 @@ class EternalReturnFindPlayerRender(
      * 对局评价
      */
     private fun matchRating(matches: EternalReturnMatches): String? {
-        val asia2Count = matches.matches.count { it.serverName == "Asia2" }
-        val asia2Rank1Or2Count =
-            matches.matches.count { it.serverName == "Asia2" && (it.gameRank == 1 || it.gameRank == 2) }
-        if (asia2Count > 15) {
-            if (asia2Rank1Or2Count > asia2Count / 2) {
-                return "全是亚二 而且胜率还这么高? 这绝对是炸鱼(ﾟдﾟ)"
-            } else if (asia2Rank1Or2Count in 0..2) {
-                return "亚二全是炸鱼哥 快跑! (╯°Д°)╯ ┻━┻"
-            }
-        }
-
-        if (matches.matches.count { it.matchTypeStr == "钴协议" } > 10) {
-            return "全是钴协议喵 (⁰▿⁰)"
-        }
-        val notGuardMatches = matches.matches.filter { it.matchTypeStr != "钴协议" }
-        val totalMatches = notGuardMatches.count { it.matchTypeStr != "钴协议" }
-        val rankMatches = notGuardMatches.filter { it.matchTypeStr == "排位" }
-        if (totalMatches > 10) {
-            val rank1Count = notGuardMatches.count { it.gameRank == 1 }
-            val rank2Count = notGuardMatches.count { it.gameRank == 2 }
-            val rank3Count = notGuardMatches.count { it.gameRank == 3 }
-            val highDmg = notGuardMatches.maxOfOrNull { it.damageToPlayer } ?: 0
-            val lowDmg = notGuardMatches.minOfOrNull { it.damageToPlayer } ?: 0
-            val avgDmg = notGuardMatches.sumOf { it.damageToPlayer } / notGuardMatches.size
-            val rankLastCount = notGuardMatches.count { it.gameRank == it.squadRumbleRank && it.squadRumbleRank != 2 }
-            return when {
-                rank1Count > totalMatches * 0.6 -> "太强了！简直就是炸鱼 (ﾉ≧∀≦)ﾉ"
-                rank3Count > totalMatches / 2 -> "怎么总是老三,谁的问题!! (／‵Д′)／~ ╧╧"
-                rank1Count == totalMatches -> "这绝对是炸鱼! 请务必带上我 (๑•̀ㅂ•́)و✧"
-                rankLastCount > totalMatches * 0.5 -> "垫底次数有点多啊 加油吧( ´･･)ﾉ(._.`)"
-                rank1Count == 0 && rank2Count == 0 -> "全灰! 这是怎么做到的?  (╬ﾟдﾟ)"
-                rank1Count == totalMatches - 1 -> "差一局就全胜? 大佬能带带我吗 我也想体验炸鱼的滋味(☉д⊙)"
-                rank1Count == rank2Count && rank2Count == rank3Count && rank1Count != 1 -> "胜负分布很均匀呢 (￣ω￣;)"
-                rank1Count + rank2Count == 1 -> "嗯嗯 真是相当糟糕的战绩呢(･ω･)"
-                rank1Count == 0 && rank2Count == totalMatches -> "万年老二...总是差那么一点 队友别浪了!(´；ω；｀)"
-                avgDmg >= 25000 -> "(ﾉ≧∇≦)ﾉ 这均伤简直离谱! 你玩的是亚二吗???"
-                avgDmg in 7000..7999 -> "(´･_･`) 要多练习输出手法呢 团战也要适当拉扯和走位呢"
-                avgDmg <= 5000 -> "这输出(´-﹏-`；) 你玩的是约翰吗？"
-                highDmg >= 30000 && lowDmg <= 2000 -> "发挥不稳定呢(。-`ω´-) 时而超神时而超鬼光速下机"
-                else -> if (rankMatches.size > 10) {
-
-                    val mmrState = rankMatches.sumOf { it.mmrGain }
-                    when {
-                        mmrState < -400 -> "恭喜您，马上就回到属于你的段位了\uD83E\uDD23\uD83E\uDD23"
-                        mmrState < -200 -> "哎哟我去，您这是反向冲分啊？建议改ID：『慈善家』🤡"
-                        mmrState < -50 -> "${rankMatches.size}场 掉了${-mmrState}分？ \uD83E\uDD23\uD83E\uDD23\uD83E\uDD23"
-                        mmrState < 0 -> "打了这么多把分还掉了？您这是来搞笑的吗？😅"
-                        mmrState == 0 -> "忙活半天原地踏步+0分 您是搁这打维护还是您搁这养生呢？🛌"
-                        mmrState in 1..10 -> "${rankMatches.size}场+$mmrState 分？...您这还不如玩个跑的快的苟到第三名去逃生？\uD83D\uDE05"
-                        mmrState in 11..50 -> "可以可以，至少加分了，对你来说已经非常棒了\uD83D\uDC4F\uD83D\uDC4F\uD83D\uDC4F"
-                        mmrState in 51..200 -> "美好的一天从小分开始加起喵~(。-`ω´-) "
-                        mmrState in 201..300 -> "段位提升了呢!\uD83D\uDC4D"
-                        mmrState > 301 -> "哇哦 好厉害 加了这么多分(★ω★)"
-                        else -> "o.O?"
-                    }
-                } else "o.O?"
-            }
-        }
-        return null
+        val maxServer = matches.matches.groupBy { it.serverName }.maxBy { it.value.size }.value.first().serverNameStr
+        val maxMatchType =
+            matches.matches.groupBy { it.matchTypeStr }.maxBy { it.value.size }.value.first().matchTypeStr
+        val matchesData = matches.matches.filter { it.matchTypeStr == maxServer }
+        val filterCount = matchesData.count()
+        val top1Count = matchesData.filter { it.gameRank == 1 }.size
+        val winRate = String.format("%.2f", (top1Count.toDouble() / filterCount.toDouble()) * 100)
+        return "常驻服务器${maxServer}:${maxMatchType}模式:${filterCount}场对局:胜率:${winRate}%"
     }
 
 
@@ -424,13 +374,14 @@ class EternalReturnFindPlayerRender(
         matches: EternalReturnMatches,
         eternalReturnRender: EternalReturnRender,
     ) {
-        val rightContent = StringBuilder()
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
         coroutineScope {
+            // 最近一场的排位信息
             val firstMatchId = matches.matches.firstOrNull { match -> match.matchTypeStr == "排位" }?.gameId
-            val deferredResults = matches.matches
-                .map { match ->
+            matches.matches
+                .forEach { match ->
                     try {
+                        // 获取队友信息
                         val teammate = firstMatchId?.let {
                             if (match.gameId == firstMatchId) {
                                 val seasonID =
@@ -442,16 +393,13 @@ class EternalReturnFindPlayerRender(
                                 )
                             } else null
                         }
-                        matcherConvert(match, dateFormatter, teammate)
+
+                        eternalReturnRender.matches.add(matcherConvert(match, dateFormatter, teammate))
                     } catch (e: Exception) {
                         log.error { e.printStackTrace() }
                     }
                 }
-            deferredResults.forEach { result ->
-                rightContent.append(result)
-            }
         }
-        eternalReturnRender.rightContent = rightContent.toString()
     }
 
 

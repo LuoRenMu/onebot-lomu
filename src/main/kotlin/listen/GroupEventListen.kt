@@ -4,17 +4,15 @@ import cn.luorenmu.action.PermissionsManager
 import cn.luorenmu.action.commandProcess.OneBotCommandAllocator
 import cn.luorenmu.action.listenProcess.BilibiliEventListen
 import cn.luorenmu.action.listenProcess.PetpetListen
-import cn.luorenmu.entiy.RecentlyMessageQueue
+import cn.luorenmu.common.annotation.BlackList
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
-import cn.luorenmu.repository.entiy.GroupMessage
+
 import com.mikuac.shiro.annotation.GroupMessageHandler
 import com.mikuac.shiro.annotation.common.Shiro
-import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.Bot
 import com.mikuac.shiro.dto.event.message.GroupMessageEvent
 import org.springframework.stereotype.Component
-import java.time.LocalDateTime
 
 
 /**
@@ -31,11 +29,9 @@ class GroupEventListen(
     private val permissionsManager: PermissionsManager,
     private val petpetListen: PetpetListen,
 ) {
-    companion object {
-        val groupMessageQueue: RecentlyMessageQueue<GroupMessage> = RecentlyMessageQueue()
-    }
 
     @GroupMessageHandler
+    @BlackList
     fun groupMsgListen(bot: Bot, groupMessageEvent: GroupMessageEvent) {
         val groupId = groupMessageEvent.groupId
         val sender = groupMessageEvent.sender
@@ -55,32 +51,11 @@ class GroupEventListen(
             bot.selfId
         )
 
-        val groupMessage =
-            GroupMessage(
-                null,
-                groupId,
-                bot.selfId,
-                LocalDateTime.now(),
-                groupMessageEvent
-            )
-
 
         // 指令
         oneBotCommandAllocator.process(bot, messageSender)
         // 监听类
         bilibiliEventListen.process(bot, messageSender)
         petpetListen.process(messageSender)
-
-
-        // 同一个人在指定的20条中发了同一条消息 不入队列
-        groupMessageQueue.map[groupId]?.let {
-            for (gM in it) {
-                if (gM.groupEventObject.message == message && senderId == gM.groupEventObject.sender.userId) {
-                    return
-                }
-            }
-        }
-        //消息入队
-        groupMessageQueue.addMessageToQueue(groupId, groupMessage)
     }
 }

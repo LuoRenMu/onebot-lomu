@@ -14,7 +14,6 @@ import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.common.utils.OneBotMedia
 import com.mikuac.shiro.core.BotContainer
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -27,21 +26,14 @@ import java.util.concurrent.TimeUnit
  * Date 2024.09.01 14:40
  */
 @Component
- class EternalReturnRewardPushTask(
+class EternalReturnRewardPushTask(
     private val oneBotConfigRepository: OneBotConfigRepository,
     private val commandConfigRepository: OneBotCommandConfigRepository,
     val botContainer: BotContainer,
 ) {
     private var failed = 0
     private val log = KotlinLogging.logger { }
-    private val filterNews = oneBotConfigRepository.findOneByConfigName("filterNews")?.configContent ?: run {
-        oneBotConfigRepository.save(
-            OneBotConfig(
-                null, "filterNews", "(((?<!冲向永恒.?)活动)|(上线奖励)|(兑换券)|(排位奖励)|(礼物)|(通行证))"
-            )
-        )
-        "(((?<!冲向永恒.?)活动)|(上线奖励)|(兑换券)|(排位奖励)|(礼物)|(通行证))"
-    }
+    private val filterNews = Regex("(((?<!冲向永恒.?)活动)|(上线奖励)|(兑换券)|(排位奖励)|(礼物)|(通行证))")
 
 
     @Scheduled(cron = "0 */3 * * * *")
@@ -99,20 +91,19 @@ import java.util.concurrent.TimeUnit
             if (article.id == lastId) {
                 return
             }
-            if (article.i18ns.zhCN.title.contains(filterNews.toRegex())) {
-                asyncPushGroup(
+            if (article.i18ns.zhCN.title.contains(filterNews)) {
+                pushGroup(
                     groupList,
                     MsgUtils.builder().text("永恒轮回活动推送:${article.i18ns.zhCN.title}")
                         .img(OneBotMedia().cache(true).file(article.thumbnailUrl))
-                        .text("${article.url}?hl=zh-CN\n如需LoMu-Bot发送详细信息 需要你发送该链接")
-                        .build()
+                        .text("${article.url}?hl=zh-CN\n如需LoMu-Bot发送详细信息 需要你发送该链接").build()
                 )
             }
         }
     }
 
-    @Async
-    fun asyncPushGroup(groupList: List<Long>, msg: String) {
+
+    fun pushGroup(groupList: List<Long>, msg: String) {
         val bot = botContainer.getFirstBot()
         for (group in groupList) {
             TimeUnit.SECONDS.sleep(1)

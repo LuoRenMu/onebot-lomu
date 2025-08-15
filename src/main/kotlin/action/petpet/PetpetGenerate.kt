@@ -26,7 +26,7 @@ class PetpetGenerate {
                 )
             )
         )
-        val localPath = "${ReadWriteFile.CURRENT_PATH.substring(1)}/image/qq/petpet"
+        val localPath = "${ReadWriteFile.CURRENT_PATH}/image/qq/petpet"
         val savePath = "$localPath/${UUID.randomUUID()}.${resultImage.format}"
         resultImage.save(savePath)
         return savePath

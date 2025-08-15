@@ -55,21 +55,9 @@ fun Bot.sendGroupMsgLimit(groupId: Long, message: String) {
     sendMsgLimit(groupId, message, MessageType.GROUP)
 }
 
-fun Bot.sendPrivateMsgLimit(id: Long, message: String) {
-    sendMsgLimit(id, message, MessageType.PRIVATE)
-}
 
 
-fun Bot.addMsgLimit(id: Long, message: String) {
-    synchronized(selfRecentlySendMessage) {
 
-        if (selfRecentlySent(id, message)) {
-            return
-        }
-
-        selfRecentlySendMessage.addMessageToQueue(id, SelfSendMsg(message))
-    }
-}
 
 /**
  * msgLimit 用于作为限制的消息  (图片消息)

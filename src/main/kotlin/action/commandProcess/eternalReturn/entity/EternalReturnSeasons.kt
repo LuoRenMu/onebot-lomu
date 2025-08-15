@@ -1,5 +1,7 @@
 package action.commandProcess.eternalReturn.entity
 
+import com.alibaba.fastjson2.annotation.JSONField
+
 /**
  * @author LoMu
  * Date 2024.08.05 7:18
@@ -15,12 +17,13 @@ package action.commandProcess.eternalReturn.entity
  *       "id": 31,
  *       "key": "SEASON_16",
  *       "name": "正式赛季 S7",
- *       "isCurrent": true
+ *       "current": true
  *     }
  */
 data class EternalReturnSeasons(
     val id: Int,
     val key: String,
     val name: String,
-    val isCurrent: Boolean = false
+    @JSONField(name = "isCurrent")
+    val current: Boolean = false
 )

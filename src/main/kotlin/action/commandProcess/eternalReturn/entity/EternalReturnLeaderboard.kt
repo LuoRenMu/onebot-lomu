@@ -14,7 +14,7 @@ data class EternalReturnLeaderboard(
     val tierDistributionDtos: ArrayList<EternalReturnTierDistributionDtos>,
     val totalLeaderBoardCount: Int,
     val updatedAt: Long,
-    var currentSeason: EternalReturnCurrentSeason? = null,
+    var currentSeason: EternalReturnSeason? = null,
 )
 
 

@@ -82,17 +82,17 @@ class RedisUtils(
     fun cacheThenReturn(key: String, find: () -> String?): String? {
         redisTemplate.opsForValue()[key]?.let {
             return it
-        } ?: run {
-            val resp = find() ?: return null
-            synchronized(RedisUtils::class.java) {
-                if (redisTemplate.opsForValue()[key] == null) {
-                    redisTemplate.opsForValue()[key, resp, 1L] = TimeUnit.DAYS
-                    return find()
-                } else {
-                    return redisTemplate.opsForValue()[key]
-                }
+        }
+        val resp = find() ?: return null
+        synchronized(RedisUtils::class.java) {
+            if (redisTemplate.opsForValue()[key] == null) {
+                redisTemplate.opsForValue()[key, resp, 1L] = TimeUnit.DAYS
+                return find()
+            } else {
+                return redisTemplate.opsForValue()[key]
             }
         }
+
     }
 
 }

@@ -12,11 +12,11 @@ import org.springframework.stereotype.Component
 class HelpCommand : CommandProcess {
 
     companion object {
-        const val HELP_WORD = "LoMu-Bot使用教程 https://docs.qq.com/doc/DQnpKbnhsRkx5UFd4"
+        const val HELP_LINK = "LoMu-Bot使用教程 https://docs.qq.com/doc/DQnpKbnhsRkx5UFd4"
     }
 
     override fun process(sender: MessageSender): String? {
-        return HELP_WORD
+        return HELP_LINK
     }
 
     override fun commandName() = "HelpCommand"

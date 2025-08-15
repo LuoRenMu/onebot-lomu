@@ -13,12 +13,12 @@ data class EternalReturnRender(
     val level: Int = 1,
     val data: EternalReturnPlayerData,
     val profileImageUrl: String? = null,
-    val recentPlayers: MutableList<EternalReturnPlayerRecentPlay>,
+    val recentPlayers: MutableList<EternalReturnPlayerRecentPlay> ,
     val characterUseStats: MutableList<EternalReturnCharacterUseStats>,
-    var lomuRating: String? = null,
+    var rating: String? = null,
     val mmrStats: EternalReturnPlayerMMRStats? = null,
     val playTime: Long,
-    var rightContent: String = "",
+    var matches: MutableList<EternalReturnPlayerMatchData> = mutableListOf(),
     val season: String,
 ) {
 

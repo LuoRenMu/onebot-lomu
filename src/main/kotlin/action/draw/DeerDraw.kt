@@ -124,7 +124,7 @@ class DeerDraw(
             }
         }
 
-        val returnMsg = ReadWriteFile.currentPathFileName("image/qq/deer/${commandSender.senderId}.png").substring(1)
+        val returnMsg = ReadWriteFile.currentPathFileName("image/qq/deer/${commandSender.senderId}.png")
         drawImageUtils.saveImage(returnMsg)
         return returnMsg
     }

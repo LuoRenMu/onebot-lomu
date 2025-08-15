@@ -159,11 +159,11 @@ class EternalReturnRequestData(
         }, 2L, TimeUnit.DAYS)
     }
 
-    fun currentSeason(): EternalReturnCurrentSeason? {
-        return redisUtils.getCache("Eternal_Return_Season", EternalReturnCurrentSeason::class.java, {
+    fun currentSeason(): EternalReturnSeason? {
+        return redisUtils.getCache("Eternal_Return_Season", EternalReturnSeason::class.java, {
             val requestCurrentSeason = RequestController("eternal_return_request.current_season")
             val respCurrentSeason = requestData.requestRetry(requestCurrentSeason)
-            respCurrentSeason?.body().to<EternalReturnCurrentSeason>()
+            respCurrentSeason?.body().to<EternalReturnSeason>()
         }, 1L, TimeUnit.DAYS)
     }
 

@@ -42,11 +42,12 @@ class BotCommandControl(
                     return "你没有权限使用这个命令 因为上次更改了该功能的人权限为\n${config.role}\n" +
                             "你的权限为${sender.role}"
                 }
-            } ?: run {
-                // 配置不存在 生成配置
-                initConfig(commandName, sender, true)
-                return "已为该群启用$commandName 更改该功能权限至少需要和[${sender.senderName}]同等级权限\n${sender.role}"
             }
+
+            // 配置不存在 生成配置
+            initConfig(commandName, sender, true)
+            return "已为该群启用$commandName 更改该功能权限至少需要和[${sender.senderName}]同等级权限\n${sender.role}"
+
         } finally {
             redisUtils.deleteCache("${commandName}State:${sender.groupOrSenderId}")
         }

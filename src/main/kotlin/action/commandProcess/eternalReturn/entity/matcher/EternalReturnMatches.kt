@@ -149,6 +149,7 @@ data class EternalReturnMatches(
         // 3为排位模式，2为匹配模式 6为钴协议 8 为联盟 0为全部
         val matchTypeStr: String =
             matchModeTypeCovert(matchingMode)
+        val serverNameStr: String = serverNameCovert(serverName)
     }
 
     companion object {

@@ -1,26 +1,22 @@
 package cn.luorenmu.action
 
-import cn.luorenmu.common.extensions.getFirstBot
 import cn.luorenmu.common.extensions.sendGroupDeepMsgLimit
-import cn.luorenmu.listen.GroupEventListen.Companion.groupMessageQueue
 import cn.luorenmu.repository.ActiveSendMessageRepository
 import cn.luorenmu.repository.OneBotConfigRepository
-import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.BotContainer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
-import java.io.File
 import kotlin.random.Random
 
-private val log = KotlinLogging.logger { }
-
 @Component
-open class RandomActiveSendMessage(
+class RandomActiveSendMessage(
     val botContainer: BotContainer,
     private val oneBotConfigRepository: OneBotConfigRepository,
     private val activeSendMessageRepository: ActiveSendMessageRepository,
 ) {
+    private val log = KotlinLogging.logger { }
+
     @Async
     fun start() {
         val minute = 60 * 1000L // 60 minute
@@ -45,17 +41,6 @@ open class RandomActiveSendMessage(
                 !banGroup.contains(it.groupId.toString())
             }
             val group = groupIds.random().groupId
-            for (lastMessage in groupMessageQueue.lastMessages(group, 5)) {
-                if (lastMessage.groupEventObject.sender.userId == botContainer.getFirstBot().selfId) {
-                    return
-                }
-            }
-            if ((0..6).random() < 2) {
-                val file = File("H:\\bot\\夏紫萱表情包\\夏紫萱表情包").listFiles().random()
-                log.info { "行动消息夏紫萱 -> $group " }
-                value.sendGroupDeepMsgLimit(group, MsgUtils.builder().img(file.absolutePath).build(), null)
-                return
-            }
             val activeMessage = activeSendMessageRepository.findAll().random()
             log.info { "行动消息 -> ${activeMessage.message} " }
 

@@ -20,29 +20,19 @@ class RequestData {
         val resp = requestController.request()
         ReadWriteFile.writeStreamFile(path, resp.bodyStream())
     }
-
     fun requestRetry(requestController: RequestController, retry: Int = 5): HttpResponse? {
+        if (retry == 0) {
+            return null
+        }
+
         try {
-            if (retry == 0){
-                return null
-            }
             val resp = requestController.request()
-            resp?.let {
-                when (resp.status) {
-                    200 -> {
-                        return resp
-                    }
-                    404 -> {
-                        return null
-                    }
-                    else -> {
-                        return requestRetry(requestController, retry - 1)
-                    }
-                }
-            } ?: run {
-                return requestRetry(requestController, retry - 1)
+            return when (resp?.status) {
+                200 -> resp
+                404 -> null
+                else -> requestRetry(requestController, retry - 1)
             }
-        }catch (e: Exception){
+        } catch (e: Exception) {
             return requestRetry(requestController, retry - 1)
         }
     }
@@ -53,7 +43,8 @@ class RequestData {
         val requestController = RequestController(requestDetailed)
         return requestRetry(requestController, retry)
     }
+
     fun requestRetry(requestDetailedLmd: (RequestDetailed) -> Unit): HttpResponse? {
-        return requestRetry(requestDetailedLmd,3)
+        return requestRetry(requestDetailedLmd, 3)
     }
 }

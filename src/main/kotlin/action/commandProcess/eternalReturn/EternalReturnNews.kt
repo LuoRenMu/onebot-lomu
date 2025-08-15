@@ -46,7 +46,7 @@ class EternalReturnNews(
         val newsId = regex.find(sender.message)!!.groups[1]!!.value
         val news = eternalReturnRequestData.news(newsId) ?: run { return null }
         val messages = redisUtils.getCache("news:${newsId}", EternalReturnNewsCache::class.java, {
-            val path = ReadWriteFile.CURRENT_PATH.substring(1) + "image/eternal_return/news/${newsId}"
+            val path = ReadWriteFile.CURRENT_PATH + "image/eternal_return/news/${newsId}"
             File(path).mkdirs()
             val screenshotPath = eternalReturnOfficialWebsiteScreenshot.screenshotNews(newsId, "${path}/$newsId.png")
             val forwardMessages = mutableListOf<String>()

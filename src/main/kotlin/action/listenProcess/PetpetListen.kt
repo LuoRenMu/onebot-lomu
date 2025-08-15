@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component
  * Date 2025.02.05 11:27
  */
 @Component
-open class PetpetListen(
+class PetpetListen(
     private val petpetGenerate: PetpetGenerate,
     private val botContainer: BotContainer,
     private val emojiGenerationCommand: EmojiGenerationCommand,
@@ -42,18 +42,9 @@ open class PetpetListen(
             return
         }
         TemplateRegister.getTemplate(replaceCQMessage)?.let {
-            // bot反射表情
-            if (messageSender.message.isAt(messageSender.botId)) {
-                reflectionTarget(messageSender)
-                return
-            }
             val existsFrom = it.elements.toString().contains("from")
             val triggerTo = triggerObj(messageSender, 0, existsFrom)
             val triggerFrom = triggerObj(messageSender, 1, existsFrom)
-            if (triggerTo == null || triggerFrom == null) {
-                reflectionTarget(messageSender)
-                return
-            }
             val path =
                 petpetGenerate.generate(
                     it,
@@ -66,19 +57,6 @@ open class PetpetListen(
         }
     }
 
-    private fun reflectionTarget(messageSender: MessageSender) {
-        TemplateRegister.getTemplate("抽打")?.let { lash ->
-            val path =
-                petpetGenerate.generate(
-                    lash,
-                    qqRequestData.downloadQQAvatar(messageSender.senderId.toString()),
-                    qqRequestData.downloadQQAvatar(messageSender.botId.toString()),
-                )
-            botContainer.getFirstBot()
-                .sendGroupMsg(messageSender.groupOrSenderId, MsgUtils.builder().img(path).build())
-        }
-        return
-    }
 
     /**
      *  @param index to表示0 from表示1
@@ -88,11 +66,8 @@ open class PetpetListen(
         messageSender: MessageSender,
         index: Int,
         existsFrom: Boolean,
-    ): String? {
-        // 就是不允许对bot使用表情
-        if (messageSender.senderId == messageSender.botId || messageSender.message.isAt(messageSender.botId)) {
-            return null
-        }
+    ): String {
+
 
         // 模版存在from并且当前为from的情况下 则是第一条at或第二条at
         if (existsFrom && index == 1) {
@@ -110,12 +85,12 @@ open class PetpetListen(
         // 自己发送的图片
         messageSender.message.getCQFileStr()?.let {
             return botContainer.getFirstBot().getImage(it).data.file
-        } ?: run {
-            // 回复的图片
-            messageSender.message.getFileStr()?.let {
-                return botContainer.getFirstBot().getImage(it).data.file
-            }
         }
+        // 回复的图片
+        messageSender.message.getFileStr()?.let {
+            return botContainer.getFirstBot().getImage(it).data.file
+        }
+
 
         // 当前消息为to为at的目标或自己
         messageSender.message.getAtQQ(0)?.let {
