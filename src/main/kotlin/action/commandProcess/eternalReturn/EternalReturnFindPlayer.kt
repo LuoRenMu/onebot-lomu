@@ -5,8 +5,6 @@ import cn.luorenmu.action.render.EternalReturnFindPlayerRender
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.action.webPageScreenshot.EternalReturnWebPageScreenshot
 import cn.luorenmu.common.extensions.getFirstBot
-import cn.luorenmu.common.extensions.replaceAtToEmpty
-import cn.luorenmu.common.extensions.replaceBlankToEmpty
 import cn.luorenmu.common.extensions.sendGroupMsg
 import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
@@ -30,11 +28,7 @@ class EternalReturnFindPlayer(
 ) : CommandProcess {
 
     override fun process(sender: MessageSender): String? {
-        var nickname =
-            sender.message.replaceAtToEmpty(sender.botId).trim()
-                .replace(command(), "")
-                .replaceBlankToEmpty()
-                .lowercase()
+        var nickname = sender.originalMessage(command())
 
 
         // check name rule

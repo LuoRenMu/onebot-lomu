@@ -6,6 +6,7 @@ import cn.luorenmu.listen.entity.MessageSender
  * @author LoMu
  * Date 2025.01.28 13:15
  */
+
 interface CommandProcess {
     /**
      * 命令处理

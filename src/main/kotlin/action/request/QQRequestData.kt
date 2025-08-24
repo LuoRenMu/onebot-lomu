@@ -1,10 +1,10 @@
 package cn.luorenmu.action.request
 
+import cn.luorenmu.action.request.api.HTTPRequest
 import cn.luorenmu.common.utils.RedisUtils
-import cn.luorenmu.entiy.Request.RequestDetailed
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.file.ReadWriteFile
-import cn.luorenmu.request.RequestController
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -18,6 +18,13 @@ import java.util.concurrent.TimeUnit
 class QQRequestData(
     private val redisUtils: RedisUtils,
 ) {
+
+    private val log = KotlinLogging.logger { }
+
+    init {
+        ReadWriteFile.createCurrentDirs("image/qq/avatar")
+    }
+
     /**
      * 下载qq头像
      */
@@ -36,30 +43,36 @@ class QQRequestData(
                     file.delete()
                 }
                 // 如果抛出了错误 大概率是图片正在使用 不能删除
-            } catch (_: Exception){
+            } catch (_: Exception) {
                 return avatarPath
             }
         }
 
         val requestUrl = "https://q1.qlogo.cn/g?b=qq&nk=$qq&s=640"
-        val requestDetailed = RequestDetailed().apply {
-            url = requestUrl
-            method = "GET"
-        }
         try {
-            val requestController = RequestController(requestDetailed)
-            val resp = requestController.request()
+            val resp = HTTPRequest.requestRetry {
+                it.url = requestUrl
+                it.method = "GET"
+            }
+            resp ?: run {
+                throw LoMuBotException("获取qq头像失败")
+            }
             // 通过响应头判断是否存在当前分辨率图片
             if (resp.header("Cache-Control") == "no-cache") {
-                requestDetailed.url = requestUrl.substring(0, requestUrl.length - 3) + "100"
-                val requestController = RequestController(requestDetailed)
-                val resp = requestController.request()
+                val resp = HTTPRequest.requestRetry {
+                    it.url = requestUrl.substring(0, requestUrl.length - 3) + "100"
+                    it.method = "GET"
+                }
+                resp ?: run {
+                    throw LoMuBotException("获取qq头像失败")
+                }
                 ReadWriteFile.writeStreamFile(avatarPath, resp.bodyStream())
                 return avatarPath
             }
             ReadWriteFile.writeStreamFile(avatarPath, resp.bodyStream())
         } catch (e: Exception) {
-            throw LoMuBotException("获取qq头像失败->${requestUrl},${e}")
+            log.error { e }
+            throw LoMuBotException("获取qq头像失败->")
         }
         redisUtils.setCacheIfAbsent("qqAvatar:$qq", avatarPath)
         return avatarPath

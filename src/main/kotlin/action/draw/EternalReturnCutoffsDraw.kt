@@ -2,6 +2,7 @@ package cn.luorenmu.action.draw
 
 
 import cn.luorenmu.action.request.EternalReturnRequestData
+import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
 import cn.luorenmu.common.utils.DrawImageUtils
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.common.utils.RedisUtils
@@ -24,9 +25,7 @@ class EternalReturnCutoffsDraw(
     private val redisUtils: RedisUtils,
     private val eternalReturnRequestData: EternalReturnRequestData,
 ) {
-    private fun doubleToPercentage(value: Double, i: Int): String {
-        return "%.1f".format(value * i)
-    }
+
 
     suspend fun draw(): String {
         val tierDistributions = eternalReturnRequestData.tierDistributionsFind()
@@ -80,7 +79,7 @@ class EternalReturnCutoffsDraw(
                 draw.drawString("Based on DAK.GG Data.", Color.orange, 45, 70, 10)
                 draw.drawString("最近更新: $date (30分钟后更新)", Color.gray, 40, 90, 12)
                 draw.drawImage(
-                    eternalReturnRequestData.checkTierIconExistThenGetPathOrDownload(
+                    EternalReturnDakGGAPI.Download.dakGGDownloadTierIcon(
                         eternal.tierType
                     ),
                     40,
@@ -91,7 +90,7 @@ class EternalReturnCutoffsDraw(
                 )
                 draw.drawString(eternal.mmr.toString(), Color.white, 80, 130, 13)
                 draw.drawImage(
-                    eternalReturnRequestData.checkTierIconExistThenGetPathOrDownload(
+                    EternalReturnDakGGAPI.Download.dakGGDownloadTierIcon(
                         demigod.tierType
                     ),
                     140,
@@ -113,7 +112,7 @@ class EternalReturnCutoffsDraw(
                     }
 
                     draw.drawImage(
-                        eternalReturnRequestData.checkTierIconExistThenGetPathOrDownload(
+                        EternalReturnDakGGAPI.Download.dakGGDownloadTierIcon(
                             i
                         ),
                         x,
@@ -123,7 +122,7 @@ class EternalReturnCutoffsDraw(
                         null
                     )
                     draw.drawString(
-                        "${count[i]}人(${doubleToPercentage(rate[i]!!, 100)}%)",
+                        "${count[i]}人(${"%.1f".format(rate[i]!! * 100)}%)",
                         Color.white,
                         x + 30,
                         h * (num - 1) + 33,

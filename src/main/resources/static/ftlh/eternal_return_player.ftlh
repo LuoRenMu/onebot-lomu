@@ -31,7 +31,7 @@
         </div>
         <div id="describe">
             <div id="logo">Design inspired by DakGG •
-                Powered by LoMu-Bot
+                Powered by LuoRenMu
             </div>
         </div>
     </div>
@@ -237,7 +237,7 @@
             </#if>
         </div>
         <div id="right">
-            <#if lomuRating??>
+            <#if rating??>
                 <div id="lomu_rating">
                     ${rating?no_esc}
                 </div>

@@ -4,8 +4,6 @@ import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.action.webPageScreenshot.EternalReturnWebPageScreenshot
 import cn.luorenmu.common.extensions.getFirstBot
-import cn.luorenmu.common.extensions.replaceAtToEmpty
-import cn.luorenmu.common.extensions.replaceBlankToEmpty
 import cn.luorenmu.common.extensions.toPinYin
 import cn.luorenmu.config.entity.CharacterNickName
 import cn.luorenmu.config.entity.CharacterNickNameList
@@ -26,11 +24,7 @@ class EternalReturnFindCharacter(
     private val characterNames: CharacterNickNameList,
 ) : CommandProcess {
     override fun process(sender: MessageSender): String? {
-        var characterName = sender.message.replaceAtToEmpty(sender.botId).trim()
-            .replace(command(), "")
-            .replaceBlankToEmpty()
-            .lowercase()
-
+        var characterName = sender.originalMessage(command())
         val originName = characterName
         val indexMatch = """[0-9]""".toRegex().find(characterName)?.let {
             val index = it.value.toInt()
@@ -40,11 +34,8 @@ class EternalReturnFindCharacter(
         return if (characterName.isBlank()) null else {
             // 对包含数字的名称进行特殊处理(暂时)
             if (originName.lowercase() == "c0" || originName.lowercase() == "u4dn" || originName.lowercase() == "11") eternalReturnFindCharacter(
-                originName,
-                -1,
-                sender.messageId.toString()
-            ) else
-                eternalReturnFindCharacter(characterName, indexMatch, sender.messageId.toString())
+                originName, -1, sender.messageId.toString()
+            ) else eternalReturnFindCharacter(characterName, indexMatch, sender.messageId.toString())
         }
 
     }
@@ -70,11 +61,14 @@ class EternalReturnFindCharacter(
                     weaponType = weaponTypes[i].key
                 }
                 botContainer.getFirstBot().setMsgEmojiLike(messageId, "124")
-                return eternalReturnWebPageScreenshot.webCharacterScreenshot(inputName, it, weaponType) +
-                        if (weaponTypes.size > 1) "角色武器:${
-                            weaponTypes.withIndex()
-                                .joinToString(", ") { weapon -> "${weapon.index}. ${findWeaponName(weapon.value.key)}" }
-                        }" else ""
+                return eternalReturnWebPageScreenshot.webCharacterScreenshot(
+                    inputName,
+                    it,
+                    weaponType
+                ) + if (weaponTypes.size > 1) "角色武器:${
+                    weaponTypes.withIndex()
+                        .joinToString(", ") { weapon -> "${weapon.index}. ${findWeaponName(weapon.value.key)}" }
+                }" else ""
             }
         }
         return null

@@ -1,7 +1,7 @@
 package cn.luorenmu.action.draw
 
+import cn.luorenmu.action.commandProcess.bot.entity.DeerSender
 import cn.luorenmu.action.draw.entity.DeerRank
-import cn.luorenmu.action.listenProcess.entity.DeerSender
 import cn.luorenmu.action.request.QQRequestData
 import cn.luorenmu.common.utils.DrawImageUtils
 import cn.luorenmu.file.ReadWriteFile
@@ -23,6 +23,10 @@ class DeerDraw(
     private val deerRepository: DeerRepository,
     private val qqRequestData: QQRequestData,
 ) {
+    init {
+        ReadWriteFile.createCurrentDirs("image/qq/deer")
+    }
+
     private fun ranking(senderId: Long): DeerRank {
         val nowYear = LocalDateTime.now().year
         val nowMonth = LocalDateTime.now().monthValue
@@ -80,7 +84,8 @@ class DeerDraw(
             drawImageUtils.drawString(commandSender.senderName, Color.black, 450, 780, 30)
         }
 
-        val deerSenderCount = deerRepository.findByYearAndMonth(LocalDateTime.now().year, LocalDateTime.now().monthValue).count()
+        val deerSenderCount =
+            deerRepository.findByYearAndMonth(LocalDateTime.now().year, LocalDateTime.now().monthValue).count()
         val ranking = ranking(commandSender.senderId)
         drawImageUtils.drawString(
             "当月在${deerSenderCount}人中 排名第${ranking.ranking} 名与${ranking.rankingCount}人位于同一名次",

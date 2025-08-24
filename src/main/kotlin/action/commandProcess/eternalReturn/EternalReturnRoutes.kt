@@ -3,8 +3,6 @@ package cn.luorenmu.action.commandProcess.eternalReturn
 import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.webPageScreenshot.EternalReturnWebPageScreenshot
 import cn.luorenmu.common.extensions.getFirstBot
-import cn.luorenmu.common.extensions.replaceAtToEmpty
-import cn.luorenmu.common.extensions.replaceBlankToEmpty
 import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
 import com.mikuac.shiro.core.BotContainer
@@ -22,10 +20,7 @@ class EternalReturnRoutes(
 
 
     override fun process(sender: MessageSender): String? {
-        val routesId = sender.message.replaceAtToEmpty(sender.botId).trim()
-            .replace(command(), "")
-            .replaceBlankToEmpty()
-            .lowercase()
+        val routesId = sender.originalMessage(command())
         botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
         return web.webRoutesPageScreenshot(routesId)
     }

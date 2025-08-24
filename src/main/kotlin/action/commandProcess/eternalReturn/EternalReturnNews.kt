@@ -3,7 +3,7 @@ package cn.luorenmu.action.commandProcess.eternalReturn
 import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.EternalReturnNewsCache
 import cn.luorenmu.action.request.EternalReturnRequestData
-import cn.luorenmu.action.request.RequestData
+import cn.luorenmu.action.request.api.HTTPRequest
 import cn.luorenmu.action.webPageScreenshot.EternalReturnOfficialWebsiteScreenshot
 import cn.luorenmu.common.extensions.getFirstBot
 import cn.luorenmu.common.utils.RedisUtils
@@ -32,7 +32,6 @@ class EternalReturnNews(
     private val redisUtils: RedisUtils,
     private val eternalReturnRequestData: EternalReturnRequestData,
     private val botContainer: BotContainer,
-    private val requestData: RequestData,
 ) : CommandProcess {
 
     private val log = KotlinLogging.logger {}
@@ -82,7 +81,7 @@ class EternalReturnNews(
             val lastIndexOf = it.lastIndexOf(".")
             val type = it.substring(lastIndexOf)
             val imgPath = "${outputPath}/${UUID.randomUUID()}.$type"
-            requestData.downloadStream(it, imgPath)
+            HTTPRequest.downloadStream(it, imgPath)
             localImages.add(imgPath)
         }
         return localImages

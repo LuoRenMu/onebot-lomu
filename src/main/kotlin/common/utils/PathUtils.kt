@@ -8,14 +8,20 @@ import java.io.File
  * Date 2024.08.03 9:34
  */
 object PathUtils {
-    private fun lastDir(path: String) {
+    private fun createLastDir(path: String) {
         val lastIndexOf = path.lastIndexOf("/")
         File(path.substring(0, lastIndexOf)).mkdirs()
     }
 
+    fun getConfigPath(fileName: String): String {
+        val path = ReadWriteFile.currentPathFileName("config/$fileName")
+        createLastDir(path)
+        return path
+    }
+
     fun getImagePath(name: String): String {
         val path = ReadWriteFile.currentPathFileName("image/${name}.png")
-        lastDir(path)
+        createLastDir(path)
         return path
     }
 

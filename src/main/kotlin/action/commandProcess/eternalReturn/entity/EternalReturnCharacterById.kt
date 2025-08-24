@@ -10,21 +10,18 @@ data class EternalReturnCharacterById(
     val name: String,
     val imageName: String,
     val imageUrl: String,
-    val backgroundImageUrl: String,
     val communityImageUrl: String,
-    val fullImageUrl: String,
-    val resultImageUrl: String,
     val weaponTypes: List<WeaponType>,
     val skins: List<Skin>,
 ) {
     data class Skin(
         val id: Long,
         val name: String,
-        val grade: Long,
+        val grade: Int,
         val imageName: String,
         val imageUrl: String,
-        val fullImageUrl: String,
-    )
+
+        )
 
     data class WeaponType(
         val id: Long,
@@ -32,8 +29,6 @@ data class EternalReturnCharacterById(
     )
 
     enum class CharacterImgUrlType(val type: String) {
-        BackgroundImageUrl("BackgroundImage"),
-        FullImageUrl("FullImage"),
         ResultImageUrl("ResultImage"),
         CommunityImageUrl("CommunityImage"),
         ImageUrl("Image"),

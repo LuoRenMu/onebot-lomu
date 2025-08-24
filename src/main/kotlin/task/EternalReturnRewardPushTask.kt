@@ -33,7 +33,10 @@ class EternalReturnRewardPushTask(
 ) {
     private var failed = 0
     private val log = KotlinLogging.logger { }
-    private val filterNews = Regex("(((?<!冲向永恒.?)活动)|(上线奖励)|(兑换券)|(排位奖励)|(礼物)|(通行证))")
+    private val filterNews =
+        Regex(
+            "(((?<!冲向永恒.?)活动)|(上线奖励)|(兑换券)|(排位奖励)|(礼物)|(通行证)|(维护)|(更新)|(通知)|(掉宝)|(任务)|(公告)|(预览))"
+        )
 
 
     @Scheduled(cron = "0 */3 * * * *")

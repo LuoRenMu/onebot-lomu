@@ -29,12 +29,8 @@ spring:
       uri: mongodb://192.168.1.104/QQMessage
     redis:
       host: 192.168.1.104
-lomu-bot:
-  mail:
-    host: smtp.qq.com
-    port: 465
-    from: 3141298408@qq.com
-    user: 3141298408
-    pass: ====
-    starttls: true
-    ssl: true
+  freemarker:
+    check-template-location: false
+logging:
+  file:
+    name: log/latest.log

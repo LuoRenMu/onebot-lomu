@@ -2,6 +2,7 @@ package cn.luorenmu.service
 
 import action.commandProcess.eternalReturn.entity.EternalReturnCharacterById
 import cn.luorenmu.action.request.EternalReturnRequestData
+import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
 import cn.luorenmu.common.utils.StringLockUtils
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Service
 class ImageService(
     private val eternalReturnRequestData: EternalReturnRequestData,
 ) {
-    fun getTierImage(id: Int) = runBlocking { eternalReturnRequestData.checkTierIconExistThenGetPathOrDownload(id) }
+    fun getTierImage(id: Int) = runBlocking { EternalReturnDakGGAPI.Download.dakGGDownloadTierIcon(id) }
 
     fun getEternalReturnCharacterImage(type: EternalReturnCharacterById.CharacterImgUrlType, id: Int, skin: Long) =
         runBlocking {
@@ -50,7 +51,7 @@ class ImageService(
 
     fun getEternalReturnItemBgImage(id: Int) = runBlocking {
         StringLockUtils.lock("itemBg:$id") {
-            eternalReturnRequestData.getItemGradeBg(id)
+            EternalReturnDakGGAPI.Download.getItemGradeBg(id)
         }
     }
 

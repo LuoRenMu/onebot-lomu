@@ -1,0 +1,17 @@
+package cn.luorenmu.action.commandProcess.bot.entity
+
+import com.alibaba.fastjson2.annotation.JSONField
+
+/**
+ * @author LoMu
+ * Date 2025.03.18 20:38
+ */
+data class BilibiliInfoFreeMarker(
+    @JSONField(name = "video_bg")
+    val videoBg: String,
+    val avatar: String,
+    @JSONField(name = "up_name")
+    val upName: String,
+    val title: String,
+    val desc: String,
+)

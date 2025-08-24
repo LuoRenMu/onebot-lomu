@@ -1,13 +1,9 @@
 package cn.luorenmu.listen
 
-import cn.luorenmu.action.PermissionsManager
 import cn.luorenmu.action.commandProcess.OneBotCommandAllocator
-import cn.luorenmu.action.listenProcess.BilibiliEventListen
-import cn.luorenmu.action.listenProcess.PetpetListen
-import cn.luorenmu.common.annotation.BlackList
+import cn.luorenmu.config.file.PermissionsManager
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
-
 import com.mikuac.shiro.annotation.GroupMessageHandler
 import com.mikuac.shiro.annotation.common.Shiro
 import com.mikuac.shiro.core.Bot
@@ -25,13 +21,9 @@ import org.springframework.stereotype.Component
 @Shiro
 class GroupEventListen(
     private val oneBotCommandAllocator: OneBotCommandAllocator,
-    private val bilibiliEventListen: BilibiliEventListen,
-    private val permissionsManager: PermissionsManager,
-    private val petpetListen: PetpetListen,
 ) {
 
     @GroupMessageHandler
-    @BlackList
     fun groupMsgListen(bot: Bot, groupMessageEvent: GroupMessageEvent) {
         val groupId = groupMessageEvent.groupId
         val sender = groupMessageEvent.sender
@@ -44,18 +36,14 @@ class GroupEventListen(
             groupId,
             sender.nickname,
             senderId,
-            permissionsManager.botRole(senderId, sender.role),
+            PermissionsManager.botRole(senderId, sender.role),
             groupMessageEvent.messageId,
             message,
             MessageType.GROUP,
             bot.selfId
         )
 
-
         // 指令
         oneBotCommandAllocator.process(bot, messageSender)
-        // 监听类
-        bilibiliEventListen.process(bot, messageSender)
-        petpetListen.process(messageSender)
     }
 }

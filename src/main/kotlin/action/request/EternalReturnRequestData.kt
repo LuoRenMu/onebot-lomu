@@ -1,21 +1,26 @@
 package cn.luorenmu.action.request
 
-import action.commandProcess.eternalReturn.entity.*
+import action.commandProcess.eternalReturn.entity.EternalReturnCharacter
+import action.commandProcess.eternalReturn.entity.EternalReturnCharacterById
+import action.commandProcess.eternalReturn.entity.EternalReturnLeaderboard
+import action.commandProcess.eternalReturn.entity.EternalReturnSeason
 import action.commandProcess.eternalReturn.entity.profile.EternalReturnProfile
 import action.commandProcess.eternalReturn.entity.tier.EternalReturnTierDistributions
-import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalReturnMatchesById
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.item.EternalReturnItemInfos
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalReturnMatches
+import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalReturnMatchesById
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.skill.EternalReturnTacticalSkill
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.skill.EternalReturnTraitSkills
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.tier.EternalReturnTiers
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.weapon.EternalReturnWeapons
-import cn.luorenmu.action.request.entiy.EternalReturnTraitSkillImgDTO
+import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
+import cn.luorenmu.action.request.api.EternalReturnOfficialAPI
+import cn.luorenmu.action.request.api.HTTPRequest
+import cn.luorenmu.action.request.entity.EternalReturnTraitSkillImgDTO
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.common.utils.RedisUtils
 import cn.luorenmu.entiy.Request.RequestDetailed
 import cn.luorenmu.exception.LoMuBotException
-import cn.luorenmu.file.ReadWriteFile
 import cn.luorenmu.request.RequestController
 import com.alibaba.fastjson2.JSONException
 import com.alibaba.fastjson2.to
@@ -32,7 +37,6 @@ import java.util.concurrent.TimeUnit
 @Component
 class EternalReturnRequestData(
     private val redisUtils: RedisUtils,
-    private val requestData: RequestData,
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -41,8 +45,7 @@ class EternalReturnRequestData(
         if (counter == 3) {
             return true
         }
-        val requestController = RequestController("eternal_return_request.find_player")
-        requestController.replaceUrl("nickname", nickname)
+        val requestController = RequestController(EternalReturnDakGGAPI.Player.syncDataV0API(nickname))
         try {
             val request = requestController.request()
             request?.let {
@@ -55,7 +58,7 @@ class EternalReturnRequestData(
                 }
                 return !body.contains("not_found")
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return true
         }
         return true
@@ -65,8 +68,8 @@ class EternalReturnRequestData(
      * 段位总览(有哪些段位?)
      */
     fun tiers(): EternalReturnTiers? {
-        return redisUtils.getCache("Eternal_Return_Tiers", EternalReturnTiers::class.java, {
-            val resp = requestData.requestRetry(RequestController("eternal_return_request.tiers"))
+        return redisUtils.getCache("Eternal_Return: tiers", EternalReturnTiers::class.java, {
+            val resp = HTTPRequest.requestRetry(RequestController(EternalReturnDakGGAPI.Data.tiersV1API()))
             resp?.body().to<EternalReturnTiers>()
         }, 2L, TimeUnit.DAYS)
     }
@@ -81,13 +84,16 @@ class EternalReturnRequestData(
         teamMode: String = "ALL",
         page: Int = 1,
     ): EternalReturnMatches? {
-        val requestController = RequestController("eternal_return_request.matches")
-        requestController.replaceUrl("nickname", nickname)
-        requestController.replaceUrl("season", season)
-        requestController.replaceUrl("matching_mode", matchingMode)
-        requestController.replaceUrl("team_mode", teamMode)
-        requestController.replaceUrl("page", page.toString())
-        val resp = requestData.requestRetry(requestController)
+        val requestController = RequestController(
+            EternalReturnDakGGAPI.Player.matchesV1API(
+                nickname = nickname,
+                season = season,
+                matchingMode = matchingMode,
+                teamMode = teamMode,
+                page = page,
+            )
+        )
+        val resp = HTTPRequest.requestRetry(requestController)
         return resp?.body().to<EternalReturnMatches>()
     }
 
@@ -95,15 +101,16 @@ class EternalReturnRequestData(
      * 段位分布
      */
     fun tierDistributionsFind(): EternalReturnTierDistributions? {
-        val resp = requestData.requestRetry(RequestController("eternal_return_request.tier_distribution"))
+        val resp =
+            HTTPRequest.requestRetry(RequestController(EternalReturnDakGGAPI.Statistics.tierDistributionV0API()))
         return resp?.body().to<EternalReturnTierDistributions>()
 
     }
 
     fun leaderboardFind(): EternalReturnLeaderboard? {
-        return currentSeason()?.let {
-            val requestLeaderboard = RequestController("eternal_return_request.leaderboard")
-            requestLeaderboard.replaceUrl("season", it.currentSeason.key)
+        return season()?.let {
+            val requestLeaderboard =
+                RequestController(EternalReturnDakGGAPI.Leaderboard.leaderboardV0API(it.currentSeason.key))
             val respLeaderboard = requestLeaderboard.request()
             respLeaderboard?.let { resp ->
                 val leaderboard = resp.body().to<EternalReturnLeaderboard>()
@@ -113,76 +120,27 @@ class EternalReturnRequestData(
         }
     }
 
-    suspend fun dakGGDownloadStreamFile(streamUrl: String, outputPath: String) {
-        val requestDetailed = RequestDetailed()
-        requestDetailed.url = "https://cdn.dak.gg${streamUrl}"
-        requestDetailed.method = "get"
-        val request = RequestController(requestDetailed)
-        val resp = request.request()
-        resp?.let { ReadWriteFile.writeStreamFile(outputPath, resp.bodyStream()) }
-    }
-
-    /**
-     * 获取段位图标 round
-     * iconUrl
-     */
-    suspend fun checkTierIconExistThenGetPathOrDownload(id: Int): String {
-        val eternalReturnDataImagePath = PathUtils.getEternalReturnDataImagePath("tier/${id}.png")
-        if (!File(eternalReturnDataImagePath).exists()) {
-            dakGGDownloadStreamFile("/er/images/tier/round/$id.png", eternalReturnDataImagePath)
-        }
-        return eternalReturnDataImagePath
-    }
-
-
-    /**
-     * 英雄详细信息
-     */
-    fun characterDetailsFind(character: String, weapon: String, token: String): EternalReturnCharacterInfo? {
-        return redisUtils.getCache("Eternal_Return_Find:${character}", EternalReturnCharacterInfo::class.java, {
-            val request = RequestController("eternal_return_request.find_character_info")
-            request.replaceUrl("token", token)
-            request.replaceUrl("key", character)
-            request.replaceUrl("key1", character)
-            request.replaceUrl("weapon", weapon)
-            val resp = requestData.requestRetry(request)
-            resp!!.body().to<EternalReturnCharacterInfo>()
-        }, 2L, TimeUnit.DAYS, EternalReturnCharacterInfo::class.java)
-    }
-
 
     fun characterFind(): EternalReturnCharacter? {
-        return redisUtils.getCache("Eternal_Return_Find: characters", EternalReturnCharacter::class.java, {
-            val requestController = RequestController("eternal_return_request.character")
-            val resp = requestData.requestRetry(requestController)
+        return redisUtils.getCache("Eternal_Return: characters", EternalReturnCharacter::class.java, {
+            val requestController = RequestController(EternalReturnDakGGAPI.Data.charactersV1API())
+            val resp = HTTPRequest.requestRetry(requestController)
             resp!!.body().to<EternalReturnCharacter>()
         }, 2L, TimeUnit.DAYS)
     }
 
-    fun currentSeason(): EternalReturnSeason? {
-        return redisUtils.getCache("Eternal_Return_Season", EternalReturnSeason::class.java, {
-            val requestCurrentSeason = RequestController("eternal_return_request.current_season")
-            val respCurrentSeason = requestData.requestRetry(requestCurrentSeason)
+    fun season(): EternalReturnSeason? {
+        return redisUtils.getCache("Eternal_Return: season", EternalReturnSeason::class.java, {
+            val requestCurrentSeason = RequestController(EternalReturnDakGGAPI.Data.seasonV1API())
+            val respCurrentSeason = HTTPRequest.requestRetry(requestCurrentSeason)
             respCurrentSeason?.body().to<EternalReturnSeason>()
         }, 1L, TimeUnit.DAYS)
     }
 
-    fun checkPlayerExists(name: String): Boolean {
-        val requestProfile = RequestController("eternal_return_request.profile")
-        requestProfile.replaceUrl("season", "SEASON_1")
-        requestProfile.replaceUrl("name", name)
-        val requestRetry = requestData.requestRetry(requestProfile)
-        requestRetry?.let {
-            return true
-        }
-        return false
-    }
 
-    fun profile(name: String, season: String = "SEASON_16"): EternalReturnProfile? {
-        val requestProfile = RequestController("eternal_return_request.profile")
-        requestProfile.replaceUrl("season", season)
-        requestProfile.replaceUrl("name", name)
-        val resp = requestData.requestRetry(requestProfile)
+    fun profile(name: String, season: String = ""): EternalReturnProfile? {
+        val requestProfile = RequestController(EternalReturnDakGGAPI.Player.profileV1API(name, season))
+        val resp = HTTPRequest.requestRetry(requestProfile)
         return try {
             resp?.body().to<EternalReturnProfile>()
         } catch (e: JSONException) {
@@ -195,8 +153,7 @@ class EternalReturnRequestData(
      * 永恒轮回官网新聞
      */
     fun news(id: String): String? {
-        val requestProfile = RequestController("eternal_return_request.news")
-        requestProfile.replaceUrl("id", id)
+        val requestProfile = RequestController(EternalReturnOfficialAPI.news(id))
         val resp = requestProfile.request()
         if (resp.status != 200) {
             return null
@@ -204,20 +161,6 @@ class EternalReturnRequestData(
         return resp?.body()
     }
 
-    /**
-     * 装备背景图片 表示装备品级
-     * 持久化存储 应当缓存图片
-     * @param id 需传递图片 数字id 00-06
-     * @return 磁盘存储路径
-     */
-    suspend fun getItemGradeBg(id: Int): String {
-        val eternalReturnDataImagePath = PathUtils.getEternalReturnDataImagePath("ico/itemgradebg-0${id}.svg")
-        if (!File(eternalReturnDataImagePath).exists()) {
-            // 写死 没关系 ^ ^
-            dakGGDownloadStreamFile("/er/images/item/ico-itemgradebg-0${id}.svg", eternalReturnDataImagePath)
-        }
-        return eternalReturnDataImagePath
-    }
 
     /**
      * 获取详细对局信息
@@ -226,11 +169,13 @@ class EternalReturnRequestData(
      * @param seasonId 赛季id
      */
     suspend fun getMatchesById(id: String, nickname: String, seasonId: Int): EternalReturnMatchesById? {
-        val resp = requestData.requestRetry {
-            it.url =
-                "https://er.dakgg.io/api/v1/players/$nickname/matches/$seasonId/$id"
-            it.method = "get"
-        }
+        val resp = HTTPRequest.requestRetry(
+            EternalReturnDakGGAPI.Player.matchById(
+                nickname = nickname,
+                seasonId = seasonId,
+                id = id
+            )
+        )
         return resp?.body().to<EternalReturnMatchesById>()
     }
 
@@ -251,12 +196,12 @@ class EternalReturnRequestData(
             var skillGroupPath: String? = null
             skillGroup?.let {
                 skillGroupPath = PathUtils.getEternalReturnDataImagePath("ico/TraitSkillsIcon/${skillGroup.key}.png")
-                if (!File(skillGroupPath!!).exists()) {
-                    downloadDakGGCompleteUrlStream(skillGroup.imageUrl, skillGroupPath!!)
+                if (!File(skillGroupPath).exists()) {
+                    EternalReturnDakGGAPI.Download.downloadUrlStream(skillGroup.imageUrl, skillGroupPath)
                 }
             }
             if (!File(skillPath).exists()) {
-                downloadDakGGCompleteUrlStream(skill.imageUrl, skillPath)
+                EternalReturnDakGGAPI.Download.downloadUrlStream(skill.imageUrl, skillPath)
             }
             return EternalReturnTraitSkillImgDTO(skill = skillPath, skillGroup = skillGroupPath)
         }
@@ -264,30 +209,14 @@ class EternalReturnRequestData(
 
 
     /**
-     *  下载文件(需要完整的uri)
-     *  @param "//cdn.dak.gg/assets/er/game-assets/1.44.0/VSkillIcon_4103000.png"
-     *
-     */
-    suspend fun downloadDakGGCompleteUrlStream(url: String, outputPath: String) {
-        val resp = requestData.requestRetry {
-            it.url = "https:${url}"
-            it.method = "get"
-        }
-        ReadWriteFile.writeStreamFile(outputPath, resp?.bodyStream())
-    }
-
-    /**
      * 当前赛季的天赋
      */
     fun getTraitSkills(): EternalReturnTraitSkills? {
         return redisUtils.getCache("Eternal_Return_Trait_Skills", EternalReturnTraitSkills::class.java, {
             val requestController = RequestController(
-                RequestDetailed().apply {
-                    url = "https://er.dakgg.io/api/v1/data/trait-skills?hl=zh-cn"
-                    method = "GET"
-                }
+                EternalReturnDakGGAPI.Data.traitSkillsV1API()
             )
-            val resp = requestData.requestRetry(requestController)
+            val resp = HTTPRequest.requestRetry(requestController)
             resp?.body().to<EternalReturnTraitSkills>()
         }, 1L, TimeUnit.DAYS)
     }
@@ -304,7 +233,7 @@ class EternalReturnRequestData(
                     method = "GET"
                 }
             )
-            val resp = requestData.requestRetry(requestController)
+            val resp = HTTPRequest.requestRetry(requestController)
             resp?.body().to<EternalReturnTacticalSkill>()
         }, 1L, TimeUnit.DAYS)
     }
@@ -317,7 +246,7 @@ class EternalReturnRequestData(
         if (!File(skillPath).exists()) {
             getTacticalSkills()?.let { skill ->
                 skill.tacticalSkills.first { it.id == id }.let { idSkill ->
-                    downloadDakGGCompleteUrlStream(idSkill.imageUrl, skillPath)
+                    EternalReturnDakGGAPI.Download.downloadUrlStream(idSkill.imageUrl, skillPath)
                 }
             }
         }
@@ -336,7 +265,7 @@ class EternalReturnRequestData(
                     method = "GET"
                 }
             )
-            val resp = requestData.requestRetry(requestController)
+            val resp = HTTPRequest.requestRetry(requestController)
             resp?.body().to<EternalReturnItemInfos>()
         })
     }
@@ -351,7 +280,7 @@ class EternalReturnRequestData(
         val eternalReturnDataImagePath = PathUtils.getEternalReturnDataImagePath("ico/ItemIcon/${id}.png")
         if (!File(eternalReturnDataImagePath).exists()) {
             getItems()?.let { itemInfos ->
-                downloadDakGGCompleteUrlStream(
+                EternalReturnDakGGAPI.Download.downloadUrlStream(
                     itemInfos.items.first { it.id == id }.imageUrl,
                     eternalReturnDataImagePath
                 )
@@ -382,12 +311,6 @@ class EternalReturnRequestData(
                 val url: String = if (skin != -1L) {
                     val skinInfo = it.skins.first { skinObj -> skinObj.id == skin }
                     when (characterImgUrlType) {
-                        EternalReturnCharacterById.CharacterImgUrlType.ImageUrl ->
-                            skinInfo.imageUrl
-
-                        EternalReturnCharacterById.CharacterImgUrlType.FullImageUrl ->
-                            skinInfo.fullImageUrl
-
                         EternalReturnCharacterById.CharacterImgUrlType.CharProfileImageUrl ->
                             "//cdn.dak.gg/assets/er/game-assets/${versionRegex.find(skinInfo.imageUrl)!!.value}/CharProfile_${skinInfo.imageName}.png"
 
@@ -396,14 +319,8 @@ class EternalReturnRequestData(
                     }
                 } else {
                     when (characterImgUrlType) {
-                        EternalReturnCharacterById.CharacterImgUrlType.BackgroundImageUrl ->
-                            it.backgroundImageUrl
-
-                        EternalReturnCharacterById.CharacterImgUrlType.FullImageUrl ->
-                            it.fullImageUrl
-
                         EternalReturnCharacterById.CharacterImgUrlType.ResultImageUrl ->
-                            it.resultImageUrl
+                            it.skins.first { skinObj -> skinObj.grade == 1 }.imageUrl
 
                         EternalReturnCharacterById.CharacterImgUrlType.CommunityImageUrl ->
                             it.communityImageUrl
@@ -411,11 +328,11 @@ class EternalReturnRequestData(
                         EternalReturnCharacterById.CharacterImgUrlType.CharProfileImageUrl ->
                             "//cdn.dak.gg/assets/er/game-assets/${versionRegex.find(it.imageUrl)!!.value}/CharProfile_${it.imageName}.png"
 
-                        else -> it.resultImageUrl
+                        else -> it.skins.first { skinObj -> skinObj.grade == 1 }.imageUrl
                     }
                 }
 
-                downloadDakGGCompleteUrlStream(url, eternalReturnDataImagePath)
+                EternalReturnDakGGAPI.Download.downloadUrlStream(url, eternalReturnDataImagePath)
             }
         }
         return eternalReturnDataImagePath
@@ -425,11 +342,8 @@ class EternalReturnRequestData(
      * 所有武器信息
      */
     fun getWeapons(): EternalReturnWeapons? {
-        return redisUtils.getCache("Eternal_Return_Weapons", EternalReturnWeapons::class.java, {
-            val resp = requestData.requestRetry(RequestController(RequestDetailed().apply {
-                url = "https://er.dakgg.io/api/v1/data/masteries?hl=zh_CN"
-                method = "get"
-            }))
+        return redisUtils.getCache("Eternal_Return: weapons", EternalReturnWeapons::class.java, {
+            val resp = HTTPRequest.requestRetry(RequestController(EternalReturnDakGGAPI.Data.weaponV1API()))
             resp?.body().to<EternalReturnWeapons>()
         }, 2L, TimeUnit.DAYS)
     }
@@ -445,7 +359,7 @@ class EternalReturnRequestData(
         if (!File(eternalReturnDataImagePath).exists()) {
             getWeapons()?.let { weapons ->
                 val iconUrl = weapons.masteries.first { it.id == id }.iconUrl
-                downloadDakGGCompleteUrlStream(iconUrl, eternalReturnDataImagePath)
+                EternalReturnDakGGAPI.Download.downloadUrlStream(iconUrl, eternalReturnDataImagePath)
             }
         }
         return eternalReturnDataImagePath
@@ -465,7 +379,7 @@ class EternalReturnRequestData(
             }
         }
         if (retry) {
-            redisUtils.deleteCache("Eternal_Return_Find: characters")
+            redisUtils.deleteCache("Eternal_Return: characters")
             getCharacterInfo(id, false)
         }
         throw LoMuBotException("获取英雄信息失败")

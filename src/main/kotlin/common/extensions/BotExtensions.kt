@@ -1,15 +1,13 @@
 package cn.luorenmu.common.extensions
 
-import cn.luorenmu.entiy.RecentlyMessageQueue
-import cn.luorenmu.entiy.SelfSendMsg
+import cn.luorenmu.common.extensions.entity.RecentlyMessageQueue
+import cn.luorenmu.common.extensions.entity.SelfSendMsg
 import cn.luorenmu.listen.entity.MessageType
-import cn.luorenmu.repository.entiy.DeepMessage
 import com.mikuac.shiro.core.Bot
 import com.mikuac.shiro.core.BotContainer
 import com.mikuac.shiro.dto.action.common.ActionData
 import com.mikuac.shiro.dto.action.common.MsgId
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.util.concurrent.TimeUnit
 
 /**
  * @author LoMu
@@ -54,9 +52,6 @@ fun Bot.sendMsg(msgType: MessageType, id: Long, msg: String) {
 fun Bot.sendGroupMsgLimit(groupId: Long, message: String) {
     sendMsgLimit(groupId, message, MessageType.GROUP)
 }
-
-
-
 
 
 /**
@@ -119,29 +114,4 @@ fun Bot.sendPrivateMsg(id: Long, message: String) {
 }
 
 
-fun Bot.sendGroupDeepMsgLimit(groupId: Long, message: String, deepMessage: DeepMessage?): Boolean {
-    synchronized(selfRecentlySendMessage) {
-        val selfSendMsgs = selfRecentlySendMessage.map[groupId]
-        val message1 = message + deepMessage?.reply
-        var deepMessage1 = deepMessage
-        selfSendMsgs?.forEach {
-            if (it.message == message1) {
-                return false
-            }
-        }
-        this.sendGroupMsg(groupId, message)
-
-        // 连续发送多条消息
-        deepMessage1?.let {
-            while (true) {
-                TimeUnit.SECONDS.sleep(1)
-                this.sendGroupMsg(groupId, it.reply)
-                it.next?.let { it1 ->
-                    deepMessage1 = it1
-                } ?: break
-            }
-        }
-        return true
-    }
-}
 

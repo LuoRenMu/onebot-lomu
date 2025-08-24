@@ -4,8 +4,6 @@ import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.render.EternalReturnFindPlayerRender
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.common.extensions.getFirstBot
-import cn.luorenmu.common.extensions.replaceAtToEmpty
-import cn.luorenmu.common.extensions.replaceBlankToEmpty
 import cn.luorenmu.common.utils.RedisUtils
 import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
@@ -25,11 +23,7 @@ class EternalReturnReFindPlayer(
     private val redisUtils: RedisUtils,
 ) : CommandProcess {
     override fun process(sender: MessageSender): String? {
-        val nickname =
-            sender.message.replaceAtToEmpty(sender.botId).trim()
-                .replace(command(), "")
-                .replaceBlankToEmpty()
-                .lowercase()
+        val nickname = sender.originalMessage(command())
         if (!eternalReturnRequestData.syncPlayers(nickname)) {
             return MsgUtils.builder().text("不存在的玩家 -> $nickname").build()
         }

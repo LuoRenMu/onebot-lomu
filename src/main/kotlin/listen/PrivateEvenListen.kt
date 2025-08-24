@@ -1,5 +1,10 @@
 package cn.luorenmu.listen
 
+import cn.luorenmu.action.commandProcess.OneBotCommandAllocator
+import cn.luorenmu.config.file.PermissionsManager
+import cn.luorenmu.listen.entity.BotRole
+import cn.luorenmu.listen.entity.MessageSender
+import cn.luorenmu.listen.entity.MessageType
 import com.mikuac.shiro.annotation.PrivateMessageHandler
 import com.mikuac.shiro.annotation.PrivateMsgDeleteNoticeHandler
 import com.mikuac.shiro.annotation.common.Shiro
@@ -15,11 +20,25 @@ import org.springframework.stereotype.Component
 
 @Component
 @Shiro
-class PrivateEvenListen {
+class PrivateEvenListen(
+    private val oneBotCommandAllocator: OneBotCommandAllocator,
+) {
 
     @PrivateMessageHandler
     fun privateMessageHandler(bot: Bot, privateMessage: PrivateMessageEvent) {
-        // ignore
+        val messageSender = MessageSender(
+            privateMessage.userId,
+            "?",
+            privateMessage.userId,
+            PermissionsManager.botRole(privateMessage.userId, "private"),
+            privateMessage.messageId,
+            privateMessage.message,
+            MessageType.PRIVATE,
+            bot.selfId
+        )
+        if (messageSender.role.roleNumber > BotRole.ADMIN.roleNumber) {
+            oneBotCommandAllocator.process(bot, messageSender)
+        }
     }
 
     @PrivateMsgDeleteNoticeHandler

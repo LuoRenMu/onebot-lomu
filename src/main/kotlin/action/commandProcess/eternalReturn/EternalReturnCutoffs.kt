@@ -2,10 +2,7 @@ package cn.luorenmu.action.commandProcess.eternalReturn
 
 import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.draw.EternalReturnCutoffsDraw
-import cn.luorenmu.common.extensions.getFirstBot
-import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
-import com.mikuac.shiro.core.BotContainer
 import org.springframework.stereotype.Component
 
 /**

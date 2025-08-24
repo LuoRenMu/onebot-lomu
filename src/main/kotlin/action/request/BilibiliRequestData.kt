@@ -1,12 +1,15 @@
 package cn.luorenmu.action.request
 
-import cn.luorenmu.action.request.entiy.bilibili.*
-import cn.luorenmu.entiy.Request
-import cn.luorenmu.file.ReadWriteFile
-import cn.luorenmu.request.RequestController
+import cn.luorenmu.action.request.api.BiliBiliAPI
+import cn.luorenmu.action.request.api.HTTPRequest
+import cn.luorenmu.action.request.entity.bilibili.BilibiliPageInfoData
+import cn.luorenmu.action.request.entity.bilibili.BilibiliPageListInfo
+import cn.luorenmu.action.request.entity.bilibili.BilibiliVideoInfoStreamData
+import cn.luorenmu.action.request.entity.bilibili.BilibiliVideoStreamInfo
+import cn.luorenmu.action.request.entiy.bilibili.BilibiliVideoInfoData
+import cn.luorenmu.action.request.entiy.bilibili.BilibiliVideoInfoResponse
 import com.alibaba.fastjson2.to
 import org.springframework.stereotype.Component
-import kotlin.math.log
 
 /**
  * @author LoMu
@@ -21,29 +24,9 @@ import kotlin.math.log
 @Component
 class BilibiliRequestData {
 
-    fun downloadVideo(url: String, outputPath: String): Boolean {
-
-        val requestDetailed = Request.RequestDetailed()
-        val headers = Request.RequestParam("referer", "https://www.bilibili.com")
-        requestDetailed.url = url
-        requestDetailed.method = "GET"
-        requestDetailed.headers = listOf(headers)
-        val requestController = RequestController(requestDetailed)
-        val resp = requestController.request()
-        resp?.let {
-            val stream = resp.bodyStream()
-            ReadWriteFile.writeStreamFile(outputPath, stream)
-            return true
-        }
-        return false
-    }
-
 
     fun getVideoInfo(bvid: String, cid: Long): BilibiliVideoInfoStreamData? {
-        val requestController = RequestController("bilibili_request.video_stream")
-        requestController.replaceUrl("bvid", bvid)
-        requestController.replaceUrl("cid", cid.toString())
-        val resp = requestController.request()
+        val resp = HTTPRequest.requestRetry(BiliBiliAPI.videoSteam(cid, bvid))
         resp?.let {
             val body = it.body()
             val result = body.to<BilibiliVideoStreamInfo>()
@@ -55,14 +38,13 @@ class BilibiliRequestData {
     }
 
     fun info(bvid: String): BilibiliVideoInfoData? {
-        val requestController = RequestController("bilibili_request.info")
-        requestController.replaceUrl("bvid", bvid)
-        val resp = requestController.request()
+
+        val resp = HTTPRequest.requestRetry(BiliBiliAPI.info(bvid))
         resp?.let {
             try {
                 val result = it.body().to<BilibiliVideoInfoResponse>()
                 return result.data.firstOrNull()
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 return null
             }
 
@@ -72,9 +54,7 @@ class BilibiliRequestData {
 
 
     fun bvidToCid(bvid: String): BilibiliPageInfoData? {
-        val requestController = RequestController("bilibili_request.bvid_to_cid")
-        requestController.replaceUrl("bvid", bvid)
-        val resp = requestController.request()
+        val resp = HTTPRequest.requestRetry(BiliBiliAPI.bvidToCid(bvid))
         resp?.let {
             val result = it.body().to<BilibiliPageListInfo>()
             return result.data.firstOrNull()

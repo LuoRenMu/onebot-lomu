@@ -10,9 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class Test(
+class Test {
 
-) {
 
     fun test() {
 

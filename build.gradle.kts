@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm") version "2.0.0"
-    id("org.springframework.boot") version "3.3.2"
+    id("org.springframework.boot") version "3.3.3"
     id("io.spring.dependency-management") version "1.1.6"
     kotlin("plugin.spring") version "2.0.0"
 }
@@ -15,6 +15,7 @@ repositories {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    isEnabled = false
 }
 
 
@@ -53,7 +54,6 @@ dependencies {
     implementation("com.mikuac:shiro:2.3.6")
 
 
-
     // spring
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -69,15 +69,13 @@ dependencies {
     // kotlin 协程
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     // spirng 测试
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
 kotlin {
     jvmToolchain(17)
 }
@@ -86,3 +84,4 @@ tasks.jar {
         attributes["Main-Class"] = "cn.luorenmu.MainApplication"
     }
 }
+

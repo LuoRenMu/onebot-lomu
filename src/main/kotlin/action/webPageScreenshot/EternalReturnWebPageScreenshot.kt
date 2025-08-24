@@ -1,14 +1,11 @@
 package cn.luorenmu.action.webPageScreenshot
 
-import cn.luorenmu.action.request.RequestData
+import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
+import cn.luorenmu.action.request.api.HTTPRequest
 import cn.luorenmu.common.extensions.toPinYin
-import cn.luorenmu.common.utils.JsonObjectUtils
-import cn.luorenmu.common.utils.MatcherData
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.common.utils.RedisUtils
-import cn.luorenmu.core.WebPool
-import cn.luorenmu.entiy.Request
-import cn.luorenmu.request.RequestController
+import cn.luorenmu.common.utils.WebPool
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.options.WaitUntilState
 import com.mikuac.shiro.common.utils.MsgUtils
@@ -26,20 +23,14 @@ import java.util.concurrent.TimeUnit
 class EternalReturnWebPageScreenshot(
     private val redisUtils: RedisUtils,
     private val webPool: WebPool,
-    private val requestData: RequestData,
 ) {
 
     private val log = KotlinLogging.logger { }
 
-    companion object {
-        private const val ROUTES_URL = "https://dak.gg/er/routes/"
-        private const val CHARACTER_STATISTICS_URL = "https://dak.gg/er/statistics"
-    }
-
 
     // 角色页面
     fun webCharacterScreenshot(inputName: String, character: String, weapon: String, failed: Int = 0): String {
-        val cacheName = "EternalReturn:character_${character}_${inputName.toPinYin()}_${weapon}"
+        val cacheName = "Eternal_Return: character :${character}_${inputName.toPinYin()}_${weapon}"
         redisUtils.getCache(cacheName, String::class.java)?.let {
             log.info { "命中缓存: $character" }
             return it
@@ -47,9 +38,7 @@ class EternalReturnWebPageScreenshot(
 
         val path = PathUtils.getEternalReturnImagePath("character/${character}-${inputName.toPinYin()}-${weapon}.png")
         log.info { "正在进行截图: $character" }
-        var url = JsonObjectUtils.getString("request.eternal_return_request.find_character")
-        url = MatcherData.replaceDollardName(url, "characterName", character)
-        url = MatcherData.replaceDollardName(url, "weapon", weapon)
+        val url = EternalReturnDakGGAPI.PageURL.characterPageURL(character, weaponType = weapon)
         try {
             webPool.getWebPageScreenshot().screenshotSelector(url, path, ".contents") {
                 TimeUnit.SECONDS.sleep(3)
@@ -62,7 +51,7 @@ class EternalReturnWebPageScreenshot(
                               }"""
                 )
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             if (failed < 3) {
                 log.error { "页面截图:失败$failed 次 再次重试 $character" }
                 return webCharacterScreenshot(inputName, character, weapon, failed + 1)
@@ -79,9 +68,8 @@ class EternalReturnWebPageScreenshot(
      * 玩家战绩页面截图
      */
     fun webPlayerPageScreenshot(nickname: String): String {
-        var url = JsonObjectUtils.getString("request.eternal_return_request.players")
+        val url = EternalReturnDakGGAPI.PageURL.playerPageURL(nickname)
         log.info { "正在进行截图: $nickname" }
-        url = MatcherData.replaceDollardName(url, "nickname", nickname)
         val path = PathUtils.getEternalReturnNicknameImagePath(nickname)
         val returnMsg = MsgUtils.builder().img(OneBotMedia().file(path).cache(false).proxy(false)).build()
 
@@ -96,13 +84,13 @@ class EternalReturnWebPageScreenshot(
 
     fun webRoutesPageScreenshot(routesId: String, failed: Int = 0): String {
         val imgPath = PathUtils.getEternalReturnImagePath("routes/$routesId.png")
-        val requestUrl = ROUTES_URL + routesId
+        val requestUrl = EternalReturnDakGGAPI.PageURL.ROUTES_URL + routesId
 
         if (failed == 0) {
-            val request = requestData.requestRetry(RequestController(Request.RequestDetailed().apply {
-                url = requestUrl
-                method = "GET"
-            }))
+            val request = HTTPRequest.requestRetry {
+                it.url = requestUrl
+                it.method = "GET"
+            }
             if (request?.status == 307) {
                 return "未找到该路线"
             }
@@ -112,7 +100,7 @@ class EternalReturnWebPageScreenshot(
             webPool.getWebPageScreenshot().screenshotSelector(requestUrl, imgPath, "#content-container") {
                 TimeUnit.SECONDS.sleep(3)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             if (failed < 3) {
                 log.error { "页面截图:失败$failed 次 再次重试 $routesId" }
                 return webRoutesPageScreenshot(routesId, failed + 1)
@@ -128,10 +116,10 @@ class EternalReturnWebPageScreenshot(
         val imgPath = PathUtils.getEternalReturnImagePath("character_statistics.png")
         val returnMsg = MsgUtils.builder().img(imgPath).build()
         try {
-            return redisUtils.getCache("EternalReturn:character_statistics", String::class.java, {
+            return redisUtils.getCache("Eternal_Return: character_statistics", String::class.java, {
                 webPool.getWebPageScreenshot()
                     .customizeSelector(
-                        CHARACTER_STATISTICS_URL,
+                        EternalReturnDakGGAPI.PageURL.CHARACTER_STATISTICS_URL,
                         "#content-container",
                         WaitUntilState.DOMCONTENTLOADED
                     ) { page, box ->
@@ -145,7 +133,7 @@ class EternalReturnWebPageScreenshot(
                     }
                 returnMsg
             }, 1L, TimeUnit.DAYS) ?: returnMsg
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             if (failed < 3) {
                 log.error { "页面截图:失败$failed 次 再次重试 Statistics" }
                 return webCharacterStatisticsPageScreenshot(failed + 1)

@@ -10,16 +10,18 @@ import java.io.File
  * @author LoMu
  * Date 2025.02.04 20:39
  */
-class TemplateRegister {
+object TemplateRegister {
     private val log = KotlinLogging.logger {}
-    companion object {
-        private val petpetTemplates: HashMap<String, PetpetTemplate> by lazy { TemplateRegister().register() }
-        fun getTemplate(id: String): PetpetTemplate? {
-            return petpetTemplates[id] ?: run { return null }
-        }
+    val petPetTemplates: HashMap<String, PetpetTemplate> by lazy { register() }
+    fun getTemplate(id: String): PetpetTemplate? {
+        return petPetTemplates[id] ?: run { return null }
     }
 
     fun register(): HashMap<String, PetpetTemplate> {
+        if (!File(ReadWriteFile.currentPathFileName("templates")).exists()) {
+            log.info { "PetPet模板 没有找到目录templates" }
+            return hashMapOf()
+        }
         val jsonAll = readDirsAllJson(ReadWriteFile.currentDirs("templates"))
         val petpetTemplates = hashMapOf<String, PetpetTemplate>()
         jsonAll.forEach {
@@ -33,7 +35,6 @@ class TemplateRegister {
                 petpetTemplates[petpetName] = petpetTemplate
             }
         }
-        log.info { "已加载模版${petpetTemplates.keys.joinToString("|") { it }}" }
         return petpetTemplates
     }
 

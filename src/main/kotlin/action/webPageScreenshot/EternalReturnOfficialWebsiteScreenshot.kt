@@ -1,6 +1,7 @@
 package cn.luorenmu.action.webPageScreenshot
 
-import cn.luorenmu.core.WebPool
+import cn.luorenmu.action.request.api.EternalReturnOfficialAPI
+import cn.luorenmu.common.utils.WebPool
 import org.springframework.stereotype.Component
 
 /**
@@ -11,9 +12,6 @@ import org.springframework.stereotype.Component
 class EternalReturnOfficialWebsiteScreenshot(
     private val webPool: WebPool,
 ) {
-    companion object {
-        private const val WEBSITE_URL = "https://playeternalreturn.com/posts/news/"
-    }
 
     /**
      * 单任务线程 底层已经保证了其线程安全 避免重复截取
@@ -21,7 +19,7 @@ class EternalReturnOfficialWebsiteScreenshot(
      */
     @Synchronized
     fun screenshotNews(id: String, outputPath: String, failed: Int = 0): String {
-        val url = WEBSITE_URL + id
+        val url = EternalReturnOfficialAPI.WEBSITE_URL + id
         try {
             webPool.getWebPageScreenshot().screenshotSelector(
                 url,
@@ -30,7 +28,7 @@ class EternalReturnOfficialWebsiteScreenshot(
             ) {
                 it.evaluate("document.querySelector('#gnb').remove()")
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             if (failed < 5) {
                 return screenshotNews(id, outputPath, failed + 1)
             }

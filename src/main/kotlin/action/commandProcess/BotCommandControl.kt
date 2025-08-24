@@ -1,6 +1,5 @@
 package cn.luorenmu.action.commandProcess
 
-import cn.luorenmu.common.utils.RedisUtils
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.repository.OneBotCommandConfigRepository
 import cn.luorenmu.repository.entity.OneBotCommandConfig
@@ -14,14 +13,15 @@ import java.time.LocalDateTime
 @Component
 class BotCommandControl(
     private val configRepository: OneBotCommandConfigRepository,
-    private val redisUtils: RedisUtils,
 ) {
+    private val config: MutableMap<String, Boolean> by lazy {
+        val commandConfigAll = configRepository.findAll()
+        commandConfigAll.associate { commandConfig -> "${commandConfig.commandName}:${commandConfig.groupId}" to commandConfig.state }
+            .toMutableMap()
+    }
 
     fun commandState(commandName: String, groupId: Long): Boolean? {
-        val result = redisUtils.cacheThenReturn("${commandName}State:${groupId}") {
-            configRepository.findByCommandNameAndGroupId(commandName, groupId)?.state.toString()
-        }
-        return result?.toBoolean()
+        return config["$commandName:$groupId"]
     }
 
     fun changeCommandState(commandName: String, sender: MessageSender): String {
@@ -39,8 +39,7 @@ class BotCommandControl(
                     }
                     return "$commandName 已禁用 更改该权限至少需要\n${sender.role}"
                 } else {
-                    return "你没有权限使用这个命令 因为上次更改了该功能的人权限为\n${config.role}\n" +
-                            "你的权限为${sender.role}"
+                    return "你没有权限使用这个命令 因为上次更改了该功能的人权限为\n${config.role}\n" + "你的权限为${sender.role}"
                 }
             }
 
@@ -49,7 +48,13 @@ class BotCommandControl(
             return "已为该群启用$commandName 更改该功能权限至少需要和[${sender.senderName}]同等级权限\n${sender.role}"
 
         } finally {
-            redisUtils.deleteCache("${commandName}State:${sender.groupOrSenderId}")
+            val key = "$commandName:${sender.groupOrSenderId}"
+            val newState =
+                configRepository.findByCommandNameAndGroupId(commandName, sender.groupOrSenderId)!!.state
+            if (config[key] != newState) {
+                config[key] = newState
+            }
+
         }
     }
 
@@ -57,8 +62,7 @@ class BotCommandControl(
         // 配置不存在 生成配置
         configRepository.save(
             OneBotCommandConfig(
-                null, commandName, state, sender.role, sender.groupOrSenderId, sender.senderId,
-                LocalDateTime.now()
+                null, commandName, state, sender.role, sender.groupOrSenderId, sender.senderId, LocalDateTime.now()
             )
         )
     }

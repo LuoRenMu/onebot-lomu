@@ -15,7 +15,7 @@ import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.common.utils.FreeMarkerUtils
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.common.utils.RedisUtils
-import cn.luorenmu.core.WebPool
+import cn.luorenmu.common.utils.WebPool
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.service.ImageService
 import com.mikuac.shiro.common.utils.MsgUtils
@@ -63,13 +63,13 @@ class EternalReturnFindPlayerRender(
                 )
             redisUtils.setCache("nickname:${nickname}", returnMsg, 5L, TimeUnit.MINUTES)
             return returnMsg
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             throw LoMuBotException("无法为其生成数据 -> $nickname")
         }
     }
 
     suspend fun pageRender(nickname: String): EternalReturnRender {
-        val currentSeason = eternalReturnRequestData.currentSeason()?.currentSeason
+        val currentSeason = eternalReturnRequestData.season()?.currentSeason
 
         val currentSeasonKey = currentSeason?.key ?: run {
             throw LoMuBotException("无法获取当前赛季")
@@ -359,14 +359,15 @@ class EternalReturnFindPlayerRender(
      * 对局评价
      */
     private fun matchRating(matches: EternalReturnMatches): String? {
-        val maxServer = matches.matches.groupBy { it.serverName }.maxBy { it.value.size }.value.first().serverNameStr
+        val maxServer = matches.matches.groupBy { it.serverName }.maxBy { it.value.size }.value.first().serverName
         val maxMatchType =
-            matches.matches.groupBy { it.matchTypeStr }.maxBy { it.value.size }.value.first().matchTypeStr
-        val matchesData = matches.matches.filter { it.matchTypeStr == maxServer }
-        val filterCount = matchesData.count()
+            matches.matches.groupBy { it.serverName }.maxBy { it.value.size }.value.first().matchTypeStr
+        val matchesData = matches.matches.filter { it.serverName == maxServer }
+        val filterCount = matchesData.size
         val top1Count = matchesData.filter { it.gameRank == 1 }.size
-        val winRate = String.format("%.2f", (top1Count.toDouble() / filterCount.toDouble()) * 100)
-        return "常驻服务器${maxServer}:${maxMatchType}模式:${filterCount}场对局:胜率:${winRate}%"
+        val winRate =
+            if (top1Count == 0) "0" else String.format("%.2f", top1Count.toDouble() / filterCount.toDouble() * 100)
+        return "常驻服务器${EternalReturnMatches.serverNameCovert(maxServer)} ${maxMatchType}模式 ${filterCount}场对局 胜率:${winRate}%"
     }
 
 
@@ -385,7 +386,7 @@ class EternalReturnFindPlayerRender(
                         val teammate = firstMatchId?.let {
                             if (match.gameId == firstMatchId) {
                                 val seasonID =
-                                    eternalReturnRequestData.currentSeason()?.seasons?.first { sea -> sea.key == matches.meta.season }?.id
+                                    eternalReturnRequestData.season()?.seasons?.first { sea -> sea.key == matches.meta.season }?.id
                                 eternalReturnRequestData.getMatchesById(
                                     match.gameId.toString(),
                                     match.nickname,

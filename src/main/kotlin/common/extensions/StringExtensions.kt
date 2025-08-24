@@ -15,16 +15,18 @@ fun String.firstPinYin(): String {
     return string.toString()
 }
 
+
 fun String.replaceAtToEmpty(id: Long): String {
     return this.replace(MsgUtils.builder().at(id).build(), "")
 }
 
 fun String.replaceAtToEmpty(): String {
-    return this.replace("\\[CQ:at,qq=(\\d+)]".toRegex(), "")
+    return this.lowercase().replace("\\[CQ:at,qq=(\\d+)]".lowercase().toRegex(), "")
 }
 
 fun String.getAtQQ(i: Int = 0): String? {
-    return "\\[CQ:at,qq=(\\d+)?+]".toRegex().findAll(this).toMutableList().getOrNull(i)?.groupValues?.get(1)
+    return "\\[CQ:at,qq=(\\d+)?+]".lowercase().toRegex().findAll(this.lowercase()).toMutableList()
+        .getOrNull(i)?.groupValues?.get(1)
 }
 
 fun String.replaceBlankToEmpty(): String {
@@ -32,11 +34,11 @@ fun String.replaceBlankToEmpty(): String {
 }
 
 fun String.replaceReplyToEmpty(): String {
-    return this.replace("\\[CQ:reply,id=(\\d+)]".toRegex(), "")
+    return this.lowercase().replace("\\[CQ:reply,id=(\\d+)]".lowercase().toRegex(), "")
 }
 
 fun String.replaceImageToEmpty(): String {
-    return this.replace("\\[CQ:image,.*?]".toRegex(), "")
+    return this.lowercase().replace("\\[CQ:image,.*?]".lowercase().toRegex(), "")
 }
 
 fun String.toPinYin(): String {
@@ -48,14 +50,9 @@ fun String.toPinYin(): String {
 }
 
 fun String.isImage(): Boolean {
-    return this.contains("[CQ:image")
+    return this.lowercase().contains("[CQ:image".lowercase())
 }
 
-
-// QQ表情包
-fun String.isMface(): Boolean {
-    return this.startsWith("[CQ:mface") && this.endsWith("]")
-}
 
 fun String.getCQReplyMessageId(): String? {
     if (this.isCQReply()) {
@@ -93,15 +90,9 @@ fun String.getFileStr(index: Int = 0): String? {
     return null
 }
 
-fun String.replaceImgCqToFileStr(): String {
-    if (this.isImage()) {
-        return this.getCQFileStr() ?: this
-    }
-    return this
-}
 
 fun String.isCQAt(): Boolean {
-    return this.contains("[CQ:at")
+    return this.lowercase().contains("[CQ:at".lowercase())
 }
 
 fun String.isAt(id: Long): Boolean {
@@ -109,20 +100,20 @@ fun String.isAt(id: Long): Boolean {
 }
 
 fun String.isCQReply(): Boolean {
-    return this.contains("[CQ:reply")
+    return this.lowercase().contains("[CQ:reply".lowercase())
 }
 
 
 fun String.isCQStr(): Boolean {
-    return this.contains("[CQ:")
+    return this.lowercase().contains("[CQ:".lowercase())
 }
 
 fun String.isCQJson(): Boolean {
-    return this.contains("[CQ:json")
+    return this.lowercase().contains("[CQ:json".lowercase())
 }
 
 fun String.isCQRecord(): Boolean {
-    return this.contains("[CQ:record")
+    return this.lowercase().contains("[CQ:record".lowercase())
 }
 
 
