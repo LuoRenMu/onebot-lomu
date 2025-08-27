@@ -360,14 +360,15 @@ class EternalReturnFindPlayerRender(
      */
     private fun matchRating(matches: EternalReturnMatches): String? {
         val maxServer = matches.matches.groupBy { it.serverName }.maxBy { it.value.size }.value.first().serverName
-        val maxMatchType =
-            matches.matches.groupBy { it.serverName }.maxBy { it.value.size }.value.first().matchTypeStr
-        val matchesData = matches.matches.filter { it.serverName == maxServer }
-        val filterCount = matchesData.size
-        val top1Count = matchesData.filter { it.gameRank == 1 }.size
+        // 模式
+        val mode = matches.matches.groupBy { it.serverName }.maxBy { it.value.size }.value.first().matchingMode
+        val filter = matches.matches.filter { it.matchingMode == mode }
+        val count = filter.count()
+        val avg = filter.map { it.damageToPlayer }.average().toInt()
+        val top1Count = filter.count { it.gameRank == 1 }
         val winRate =
-            if (top1Count == 0) "0" else String.format("%.2f", top1Count.toDouble() / filterCount.toDouble() * 100)
-        return "常驻服务器${EternalReturnMatches.serverNameCovert(maxServer)} ${maxMatchType}模式 ${filterCount}场对局 胜率:${winRate}%"
+            if (top1Count == 0) "0" else String.format("%.2f", top1Count.toDouble() / count.toDouble() * 100)
+        return "常驻服务器${EternalReturnMatches.serverNameCovert(maxServer)} ${filter.first().matchTypeStr}模式 ${count}场对局 胜率:${winRate}% 平均伤害:${avg}"
     }
 
 
@@ -378,7 +379,7 @@ class EternalReturnFindPlayerRender(
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
         coroutineScope {
             // 最近一场的排位信息
-            val firstMatchId = matches.matches.firstOrNull { match -> match.matchTypeStr == "排位" }?.gameId
+            val firstMatchId = matches.matches.firstOrNull { match -> match.matchingMode == 3 }?.gameId
             matches.matches
                 .forEach { match ->
                     try {

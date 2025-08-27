@@ -25,7 +25,6 @@ import cn.luorenmu.request.RequestController
 import com.alibaba.fastjson2.JSONException
 import com.alibaba.fastjson2.to
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.apache.commons.lang3.StringUtils
 import org.springframework.stereotype.Component
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -371,7 +370,7 @@ class EternalReturnRequestData(
      */
     suspend fun getCharacterInfo(id: String, retry: Boolean = true): EternalReturnCharacterById {
         characterFind()?.let { character ->
-            if (StringUtils.isNumeric(id)) {
+            if (id.matches(Regex("^\\d+$"))) {
                 return character.characters.first { it.id == id.toInt() }
             }
             return character.characters.firstOrNull { it.key == id } ?: run {

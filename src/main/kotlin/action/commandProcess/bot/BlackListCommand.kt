@@ -59,7 +59,7 @@ class BlackListCommand : CommandProcess {
 
     override fun state(id: Long): Boolean = true
 
-    override fun command() = Regex("^(屏蔽该群|屏蔽群|允许群|屏蔽用户|允许该群)")
+    override fun command() = Regex("^(黑名单群|黑名单QQ)")
 
     override fun needAtBot() = true
 }

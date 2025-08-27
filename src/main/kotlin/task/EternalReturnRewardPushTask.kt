@@ -46,7 +46,7 @@ class EternalReturnRewardPushTask(
             return
         }
 
-        var lastId = 0
+        var lastId = 30000
         var lastNews: OneBotConfig? = null
         try {
             val body = RequestController(Request.RequestDetailed().apply {
@@ -54,7 +54,9 @@ class EternalReturnRewardPushTask(
                 method = "GET"
             }).request().body()
             val eternalReturnNews = body.to<EternalReturnNews>()
-
+            if (eternalReturnNews.articles.isEmpty()) {
+                return
+            }
             val format = DateTimeFormatter.ISO_ZONED_DATE_TIME
             val articles = eternalReturnNews.articles.sortedByDescending { LocalDateTime.parse(it.createdAt, format) }
                 .filter { it.i18ns.zhCN.title.isNotBlank() }
@@ -66,6 +68,8 @@ class EternalReturnRewardPushTask(
                 findArticleThenPush(lastId, articles)
                 lastNews = oneBotConfig
             } ?: run {
+                lastId = eternalReturnNews.articles.maxBy { art -> art.id }.id
+                oneBotConfigRepository.save(OneBotConfig("lastNews", "lastNews", lastId.toString()))
                 findArticleThenPush(lastId, articles)
             }
 
@@ -95,11 +99,18 @@ class EternalReturnRewardPushTask(
                 return
             }
             if (article.i18ns.zhCN.title.contains(filterNews)) {
+                val buildMsg = StringBuilder()
+                buildMsg.append(MsgUtils.builder().text("永恒轮回活动推送:${article.i18ns.zhCN.title}").build())
+                if (article.thumbnailUrl != null && article.thumbnailUrl.isNotEmpty()) {
+                    buildMsg.append(MsgUtils.builder().img(OneBotMedia().cache(true).file(article.thumbnailUrl)))
+                }
+                buildMsg.append(
+                    MsgUtils.builder().text("${article.url}?hl=zh-CN\n如需LoMu-Bot发送详细信息 需要你发送该链接")
+                        .build()
+                )
                 pushGroup(
                     groupList,
-                    MsgUtils.builder().text("永恒轮回活动推送:${article.i18ns.zhCN.title}")
-                        .img(OneBotMedia().cache(true).file(article.thumbnailUrl))
-                        .text("${article.url}?hl=zh-CN\n如需LoMu-Bot发送详细信息 需要你发送该链接").build()
+                    msg = buildMsg.toString()
                 )
             }
         }

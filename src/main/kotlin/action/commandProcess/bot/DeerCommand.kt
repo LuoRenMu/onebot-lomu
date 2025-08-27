@@ -56,6 +56,6 @@ class DeerCommand(
     override fun commandName() = "DeerCommand"
 
     override fun state(id: Long) = true
-    override fun command(): Regex = Regex("^((\uD83E\uDD8C)|(鹿))$")
+    override fun command(): Regex = Regex("^[\uD83E\uDD8C鹿]$")
     override fun needAtBot(): Boolean = false
 }

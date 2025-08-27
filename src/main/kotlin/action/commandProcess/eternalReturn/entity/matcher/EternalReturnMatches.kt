@@ -146,7 +146,7 @@ data class EternalReturnMatches(
                 return convertToList(equipmentVirtual)
             }
 
-        // 3为排位模式，2为匹配模式 6为钴协议 8 为联盟 0为全部
+        // 3为排位模式，2为匹配模式 6为钴协议 8 为联盟 9 为孤狼 0为全部
         val matchTypeStr: String =
             matchModeTypeCovert(matchingMode)
         val serverNameStr: String = serverNameCovert(serverName)
@@ -155,10 +155,11 @@ data class EternalReturnMatches(
     companion object {
         fun matchModeTypeCovert(matchingMode: Int) =
             when (matchingMode) {
-                3 -> "排位"
                 2 -> "匹配"
+                3 -> "排位"
                 6 -> "钴协议"
                 8 -> "联盟"
+                9 -> "孤狼"
                 else -> "未知"
             }
 

@@ -3,7 +3,7 @@ package cn.luorenmu.common.utils
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.toJSONString
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.apache.commons.lang3.StringUtils
+import org.mapstruct.ap.internal.util.Strings
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
@@ -53,7 +53,7 @@ class RedisUtils(
     ): T? {
         try {
             var json = redisTemplate.opsForValue()[key]
-            if (StringUtils.isEmpty(json)) {
+            if (Strings.isEmpty(json)) {
                 if (onMiss == null) {
                     return null
                 }
@@ -62,7 +62,7 @@ class RedisUtils(
                     // 再次查询缓存，目的是判断是否前面的线程已经set过了
                     json = redisTemplate.opsForValue()[key]
                     // 第二次校验缓存是否存在
-                    if (StringUtils.isEmpty(json)) {
+                    if (Strings.isEmpty(json)) {
                         val result = onMiss()
                         // 数据库中不存在
                         setCache(key, result, timeout, timeUnit)

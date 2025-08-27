@@ -10,7 +10,6 @@ import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
 import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.BotContainer
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 /**
@@ -23,8 +22,6 @@ class EternalReturnFindPlayer(
     private val eternalReturnWebPageScreenshot: EternalReturnWebPageScreenshot,
     private val botContainer: BotContainer,
     private val eternalReturnFindPlayerRender: EternalReturnFindPlayerRender,
-    @Value("\${server.port}")
-    private val port: String,
 ) : CommandProcess {
 
     override fun process(sender: MessageSender): String? {
@@ -45,7 +42,7 @@ class EternalReturnFindPlayer(
         botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
         try {
             return eternalReturnWebPageScreenshot.webPlayerPageScreenshot(nickname)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             botContainer.getFirstBot()
                 .sendGroupMsg(
                     sender.groupOrSenderId,

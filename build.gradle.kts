@@ -23,7 +23,6 @@ tasks.withType<Test> {
 dependencies {
     implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.microsoft.playwright:playwright:1.42.0")
-    implementation("org.apache.commons:commons-lang3:3.18.0")
 
     // 为petpet提供的包支持
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -50,9 +49,6 @@ dependencies {
     // kotlin官方库 扩展函数协程
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
-    // onebot协议库
-    implementation("com.mikuac:shiro:2.3.6")
-
 
     // spring
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -60,20 +56,21 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-aop")
+    // onebot协议库
+    implementation("com.mikuac:shiro:2.3.6")
 
-    // 中文处理 NLP、转拼音、简繁转换
-    implementation("org.ansj:ansj_seg:5.1.6")
+    // 转拼音、简繁转换
     implementation("com.github.houbb:opencc4j:1.8.1")
     implementation("com.github.promeg:tinypinyin:2.0.3")
 
     // kotlin 协程
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
     // spirng 测试
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 kotlin {

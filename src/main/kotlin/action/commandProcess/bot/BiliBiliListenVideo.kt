@@ -13,6 +13,7 @@ import cn.luorenmu.common.utils.*
 import cn.luorenmu.entiy.Request
 import cn.luorenmu.listen.entity.BotRole
 import cn.luorenmu.listen.entity.MessageSender
+import cn.luorenmu.listen.entity.MessageType
 import cn.luorenmu.repository.BilibiliVideoRepository
 import cn.luorenmu.repository.entiy.BilibiliVideo
 import cn.luorenmu.request.RequestController
@@ -50,7 +51,7 @@ class BiliBiliListenVideo(
     private val log = KotlinLogging.logger { }
 
     override fun process(sender: MessageSender): String? {
-        if (!bilibiliEventListen.state(sender.groupOrSenderId)) {
+        if (!bilibiliEventListen.state(sender.groupOrSenderId) && sender.messageType != MessageType.PRIVATE) {
             return null
         }
 
@@ -71,7 +72,8 @@ class BiliBiliListenVideo(
                 bilibili.videoPathCQ?.let { videoPathCQ ->
                     // 不为null 但是文件不存在 应当重新下载文件
                     if (File(bilibili.path!!).exists()) {
-                        return videoPathCQ
+                        botContainer.getFirstBot().sendMsg(sender.messageType, sender.groupOrSenderId, videoPathCQ)
+                        return null
                     }
 
                 } ?: run {
@@ -129,6 +131,7 @@ class BiliBiliListenVideo(
         }
         return null
     }
+
 
     private fun getVideoInfoImage(info: BilibiliVideoInfoData): String {
         val path = PathUtils.getImagePath("bilibili/video_info/${info.bvid}")

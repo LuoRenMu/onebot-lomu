@@ -1,8 +1,8 @@
-package cn.luorenmu.action.commandProcess.bot
+package cn.luorenmu.action.commandProcess.eternalReturn
 
 import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.config.entity.CharacterNickNameList
-import cn.luorenmu.config.file.EternalReturnCharacterAliasName.getCharacterNickName
+import cn.luorenmu.config.file.EternalReturnCharacterAliasName
 import cn.luorenmu.listen.entity.BotRole
 import cn.luorenmu.listen.entity.MessageSender
 import org.springframework.stereotype.Component
@@ -19,7 +19,7 @@ class CharacterNameUpdateCommand(
 
     override fun process(sender: MessageSender): String? {
         if (sender.role.roleNumber >= BotRole.ADMIN.roleNumber) {
-            val newCharacterNickName = getCharacterNickName()
+            val newCharacterNickName = EternalReturnCharacterAliasName.getCharacterNickName()
             characterNickName.characterNickNames.clear()
             characterNickName.characterNickNames.addAll(newCharacterNickName.characterNickNames)
             return "已完成"
