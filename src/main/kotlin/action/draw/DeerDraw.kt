@@ -3,11 +3,11 @@ package cn.luorenmu.action.draw
 import cn.luorenmu.action.commandProcess.bot.entity.DeerSender
 import cn.luorenmu.action.draw.entity.DeerRank
 import cn.luorenmu.action.request.QQRequestData
-import cn.luorenmu.common.utils.DrawImageUtils
 import cn.luorenmu.file.ReadWriteFile
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.repository.DeerRepository
 import cn.luorenmu.repository.entiy.Deer
+import cn.luorenmu.utils.DrawImageUtils
 import org.springframework.stereotype.Component
 import java.awt.Color
 import java.time.LocalDateTime

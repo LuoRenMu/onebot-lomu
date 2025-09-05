@@ -1,5 +1,6 @@
 package cn.luorenmu.action.commandProcess.bot
 
+import cn.luorenmu.action.commandProcess.BotCommandControl
 import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.commandProcess.bot.entity.BilibiliInfoFreeMarker
 import cn.luorenmu.action.request.BilibiliRequestData
@@ -9,8 +10,11 @@ import cn.luorenmu.action.request.entity.bilibili.BilibiliVideoInfoStreamData
 import cn.luorenmu.action.request.entiy.bilibili.BilibiliVideoInfoData
 import cn.luorenmu.common.extensions.getFirstBot
 import cn.luorenmu.common.extensions.sendMsg
-import cn.luorenmu.common.utils.*
-import cn.luorenmu.entiy.Request
+import cn.luorenmu.common.utils.FreeMarkerUtils
+import cn.luorenmu.common.utils.PathUtils
+import cn.luorenmu.common.utils.RedisUtils
+import cn.luorenmu.common.utils.WebPool
+import cn.luorenmu.entity.RequestEntity
 import cn.luorenmu.listen.entity.BotRole
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
@@ -27,7 +31,6 @@ import org.springframework.stereotype.Component
 import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.jvm.optionals.getOrNull
 
 /**
  *
@@ -38,20 +41,21 @@ import kotlin.jvm.optionals.getOrNull
 class BiliBiliListenVideo(
     private val bilibiliRequestData: BilibiliRequestData,
     private val bilibiliVideoRepository: BilibiliVideoRepository,
-    private val bilibiliEventListen: BilibiliEventListenCommand,
+    private val botCommandControl: BotCommandControl,
     private val redisUtils: RedisUtils,
     private val webPool: WebPool,
     private val botContainer: BotContainer,
     @Value("\${server.port}")
     private val port: String,
 ) : CommandProcess {
-    private val bilibiliVideoLongLink = "BV1[0-9a-zA-Z]{9}"
-    private val bilibiliVideoShortLink = "((https://bili2233.cn/([a-zA-Z0-9]+))|(https://b23.tv/([a-zA-Z0-9]+)))"
+    private val bilibiliVideoLongLink = "BV1[0-9a-zA-Z]{9}".toRegex()
+    private val bilibiliVideoShortLink =
+        "((https://bili2233.cn/([a-zA-Z0-9]+))|(https://b23.tv/([a-zA-Z0-9]+)))".toRegex()
     private val prefixImagesUrl = "/local_images/bilibili/"
     private val log = KotlinLogging.logger { }
 
     override fun process(sender: MessageSender): String? {
-        if (!bilibiliEventListen.state(sender.groupOrSenderId) && sender.messageType != MessageType.PRIVATE) {
+        if (!state(sender.groupOrSenderId) && sender.messageType != MessageType.PRIVATE) {
             return null
         }
 
@@ -166,8 +170,8 @@ class BiliBiliListenVideo(
     }
 
     private fun findBilibiliLinkBvid(message: String): String? {
-        if (message.contains(bilibiliVideoLongLink.toRegex())) {
-            return MatcherData.matcherIndexStr(message, bilibiliVideoLongLink, 0).getOrNull()?.let { bvid ->
+        if (message.contains(bilibiliVideoLongLink)) {
+            return bilibiliVideoLongLink.find(message)?.groups[1]?.value?.let { bvid ->
                 if (bvid.length == 12) {
                     return bvid
                 }
@@ -175,16 +179,16 @@ class BiliBiliListenVideo(
             }
 
         }
-        if (message.contains(bilibiliVideoShortLink.toRegex())) {
+        if (message.contains(bilibiliVideoShortLink)) {
             // short link to long link
-            val shortLink = MatcherData.matcherStr(message, bilibiliVideoShortLink, 1, "").getOrNull()
+            val shortLink = bilibiliVideoShortLink.find(message)?.groups[1]?.value
 
-            val respBody = RequestController(Request.RequestDetailed().apply {
+            RequestController(RequestEntity.RequestDetailed().apply {
                 url = shortLink!!
                 method = "GET"
             }).request().body()
 
-            return MatcherData.matcherIndexStr(respBody, bilibiliVideoLongLink, 0).getOrNull()
+            return bilibiliVideoLongLink.find(message)?.groups[1]?.value
         }
 
         return null
@@ -212,11 +216,11 @@ class BiliBiliListenVideo(
     }
 
     override fun commandName(): String =
-        "BiliBiliListenVideo"
+        "BilibiliEventListenCommand"
 
 
     override fun state(id: Long): Boolean =
-        true
+        botCommandControl.commandState(commandName(), id) ?: false
 
 
     override fun command(): Regex =

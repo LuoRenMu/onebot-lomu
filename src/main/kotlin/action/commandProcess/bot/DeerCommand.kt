@@ -1,5 +1,6 @@
 package cn.luorenmu.action.commandProcess.bot
 
+import cn.luorenmu.action.commandProcess.BotCommandControl
 import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.draw.DeerDraw
 import cn.luorenmu.listen.entity.MessageSender
@@ -14,14 +15,14 @@ import java.time.LocalDateTime
  * @author LoMu
  * Date 2025.02.21 11:08
  */
-@Component("DeerCommand")
+@Component()
 class DeerCommand(
     private val deerDraw: DeerDraw,
     private val deerRepository: DeerRepository,
-    private val emojiGenerationCommand: EmojiGenerationCommand,
+    private val botCommandControl: BotCommandControl,
 ) : CommandProcess {
     override fun process(sender: MessageSender): String? {
-        if (!emojiGenerationCommand.state(sender.groupOrSenderId)) {
+        if (!state(sender.groupOrSenderId)) {
             return null
         }
         val nowYear = LocalDateTime.now().year
@@ -53,9 +54,9 @@ class DeerCommand(
             .img(OneBotMedia().file(deerDraw.drawDeerKing(deerDays, sender))).build()
     }
 
-    override fun commandName() = "DeerCommand"
+    override fun commandName() = "EmojiGenerationCommand"
 
-    override fun state(id: Long) = true
+    override fun state(id: Long) = botCommandControl.commandState(commandName(), id) ?: false
     override fun command(): Regex = Regex("^[\uD83E\uDD8C鹿]$")
     override fun needAtBot(): Boolean = false
 }

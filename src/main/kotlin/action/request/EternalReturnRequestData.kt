@@ -19,7 +19,7 @@ import cn.luorenmu.action.request.api.HTTPRequest
 import cn.luorenmu.action.request.entity.EternalReturnTraitSkillImgDTO
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.common.utils.RedisUtils
-import cn.luorenmu.entiy.Request.RequestDetailed
+import cn.luorenmu.entity.RequestEntity.RequestDetailed
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.request.RequestController
 import com.alibaba.fastjson2.JSONException

@@ -4,7 +4,7 @@ import action.commandProcess.eternalReturn.entity.EternalReturnArticle
 import action.commandProcess.eternalReturn.entity.EternalReturnNews
 import cn.luorenmu.common.extensions.getFirstBot
 import cn.luorenmu.common.extensions.sendGroupMsgLimit
-import cn.luorenmu.entiy.Request
+import cn.luorenmu.entity.RequestEntity
 import cn.luorenmu.repository.OneBotCommandConfigRepository
 import cn.luorenmu.repository.OneBotConfigRepository
 import cn.luorenmu.repository.entity.OneBotConfig
@@ -49,7 +49,7 @@ class EternalReturnRewardPushTask(
         var lastId = 30000
         var lastNews: OneBotConfig? = null
         try {
-            val body = RequestController(Request.RequestDetailed().apply {
+            val body = RequestController(RequestEntity.RequestDetailed().apply {
                 url = "https://playeternalreturn.com/api/v1/posts/news?page=1&hl=zh-CN"
                 method = "GET"
             }).request().body()
@@ -102,7 +102,9 @@ class EternalReturnRewardPushTask(
                 val buildMsg = StringBuilder()
                 buildMsg.append(MsgUtils.builder().text("永恒轮回活动推送:${article.i18ns.zhCN.title}").build())
                 if (article.thumbnailUrl != null && article.thumbnailUrl.isNotEmpty()) {
-                    buildMsg.append(MsgUtils.builder().img(OneBotMedia().cache(true).file(article.thumbnailUrl)))
+                    buildMsg.append(
+                        MsgUtils.builder().img(OneBotMedia().cache(true).file(article.thumbnailUrl)).build()
+                    )
                 }
                 buildMsg.append(
                     MsgUtils.builder().text("${article.url}?hl=zh-CN\n如需LoMu-Bot发送详细信息 需要你发送该链接")

@@ -2,7 +2,6 @@ package cn.luorenmu.action.commandProcess
 
 import cn.luorenmu.common.extensions.getFirstBot
 import cn.luorenmu.common.extensions.isCQReply
-import cn.luorenmu.common.extensions.sendGroupMsgLimit
 import cn.luorenmu.common.extensions.sendMsg
 import cn.luorenmu.config.file.BlackListManager
 import cn.luorenmu.exception.LoMuBotException
@@ -75,14 +74,7 @@ class OneBotCommandAllocator(
         commandList.firstOrNull { isCurrentCommand(botId, messageSender.message, it) }
             ?.let { oneBotCommand ->
                 try {
-                    if (!BlackListManager.checkBlackList(messageSender) { type ->
-                            if (type == MessageType.GROUP) {
-                                bot.sendGroupMsgLimit(
-                                    messageSender.groupOrSenderId,
-                                    "未经通过的群聊，该群的消息已被屏蔽"
-                                )
-                            }
-                        }) {
+                    if (!BlackListManager.checkBlackList(messageSender)) {
                         return
                     }
                     commandUseHistoryRepository.save(

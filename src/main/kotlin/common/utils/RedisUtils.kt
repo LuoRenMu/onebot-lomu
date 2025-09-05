@@ -3,7 +3,7 @@ package cn.luorenmu.common.utils
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.toJSONString
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.mapstruct.ap.internal.util.Strings
+import org.apache.logging.log4j.util.Strings
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit

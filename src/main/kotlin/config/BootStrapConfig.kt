@@ -25,8 +25,6 @@ private val log = KotlinLogging.logger {}
 @Configuration
 class BootStrapConfig {
     init {
-
-
         InitializeFile.run(MainApplication::class.java)
         val initFiles =
             mapOf(
@@ -45,6 +43,7 @@ class BootStrapConfig {
         log.info { "黑名单列表已加载 -> ${BlackListManager.blackListData}" }
         log.info { "权限列表已加载 -> ${PermissionsManager.permissionData}" }
         log.info { "PetPet模板已加载 -> ${TemplateRegister.petPetTemplates.map { it.key }}" }
+
 
     }
 

@@ -4,7 +4,7 @@ import cn.hutool.core.codec.Base64Decoder
 import cn.hutool.core.io.resource.ResourceUtil
 import cn.luorenmu.config.entity.CharacterNickName
 import cn.luorenmu.config.entity.CharacterNickNameList
-import cn.luorenmu.entiy.Request
+import cn.luorenmu.entity.RequestEntity
 import cn.luorenmu.request.RequestController
 import com.alibaba.fastjson2.JSON
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -22,7 +22,7 @@ object EternalReturnCharacterAliasName {
         var lines: List<String>
 
         try {
-            val requestController = RequestController(Request.RequestDetailed().apply {
+            val requestController = RequestController(RequestEntity.RequestDetailed().apply {
                 url =
                     "https://api.github.com/repos/LoMuBot/EternalReturn-Alias/contents/character.txt?ref=main"
                 method = "get"

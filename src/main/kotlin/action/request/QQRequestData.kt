@@ -1,13 +1,11 @@
 package cn.luorenmu.action.request
 
 import cn.luorenmu.action.request.api.HTTPRequest
-import cn.luorenmu.common.utils.RedisUtils
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.file.ReadWriteFile
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 
 /**
@@ -15,9 +13,7 @@ import java.util.concurrent.TimeUnit
  * Date 2025.01.07 04:27
  */
 @Component
-class QQRequestData(
-    private val redisUtils: RedisUtils,
-) {
+class QQRequestData {
 
     private val log = KotlinLogging.logger { }
 
@@ -29,12 +25,7 @@ class QQRequestData(
      * 下载qq头像
      */
     fun downloadQQAvatar(qq: String): String {
-
         val avatarPath = ReadWriteFile.currentPathFileName("image/qq/avatar/${qq}.png")
-        redisUtils.getCache("qqAvatar:$qq", String::class.java, null, 1L, TimeUnit.DAYS)?.let {
-            return it
-        }
-
         // 保证图片为最新
         synchronized(QQRequestData::class.java) {
             try {
@@ -48,7 +39,7 @@ class QQRequestData(
             }
         }
 
-        val requestUrl = "https://q1.qlogo.cn/g?b=qq&nk=$qq&s=640"
+        val requestUrl = getAvatarUrlString(qq, 640)
         try {
             val resp = HTTPRequest.requestRetry {
                 it.url = requestUrl
@@ -74,7 +65,10 @@ class QQRequestData(
             log.error { e }
             throw LoMuBotException("获取qq头像失败->")
         }
-        redisUtils.setCacheIfAbsent("qqAvatar:$qq", avatarPath)
         return avatarPath
+    }
+
+    fun getAvatarUrlString(qq: String, size: Int): String {
+        return "https://q.qlogo.cn/headimg_dl?dst_uin=${qq}&spec=${size}"
     }
 }

@@ -36,7 +36,7 @@ object BlackListManager {
      * 检查消息发送者权限
      * @return true 表示允许，false 表示应拒绝
      */
-    fun checkBlackList(sender: MessageSender, reject: (MessageType) -> Unit): Boolean {
+    fun checkBlackList(sender: MessageSender, reject: (MessageType) -> Unit = {}): Boolean {
 
         if (sender.role.roleNumber >= BotRole.ADMIN.roleNumber) return true
 

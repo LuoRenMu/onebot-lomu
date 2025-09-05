@@ -1,5 +1,6 @@
 package cn.luorenmu.action.commandProcess.bot
 
+import cn.luorenmu.action.commandProcess.BotCommandControl
 import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.petpet.PetPetGenerate
 import cn.luorenmu.action.petpet.TemplateRegister
@@ -22,13 +23,13 @@ import org.springframework.stereotype.Component
  */
 @Component
 class PetPetCommand(
-    private val emojiGenerationCommand: EmojiGenerationCommand,
+    private val botCommandControl: BotCommandControl,
     private val botContainer: BotContainer,
     private val qqRequestData: QQRequestData,
 ) : CommandProcess {
     override fun process(sender: MessageSender): String? {
         if (!(sender.role.roleNumber >= BotRole.GroupAdmin.roleNumber ||
-                    emojiGenerationCommand.state(sender.groupOrSenderId))
+                    state(sender.groupOrSenderId))
         ) {
             return null
         }
@@ -106,10 +107,10 @@ class PetPetCommand(
         botId = messageSender.botId
     )
 
-    override fun commandName(): String = "PetPet"
+    override fun commandName(): String = "EmojiGenerationCommand"
 
 
-    override fun state(id: Long): Boolean = true
+    override fun state(id: Long): Boolean = botCommandControl.commandState(commandName(), id) ?: false
 
     override fun command() = Regex("^/")
 

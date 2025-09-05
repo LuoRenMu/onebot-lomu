@@ -36,7 +36,7 @@ dependencies {
     // hutool工具包
     implementation("cn.hutool:hutool-all:5.8.29")
     // 个人开发工具包
-    implementation(files("lib/MultifunctionalAutoHelper-Java.jar", "lib/petpet-core-1.0.0-beta2.jar"))
+    implementation(files("lib/petpet-core-1.0.0-beta2.jar"))
     // 阿里巴巴高效json转换
     implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.52")
     // 日志

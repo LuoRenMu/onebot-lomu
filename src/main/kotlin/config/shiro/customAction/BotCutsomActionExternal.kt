@@ -13,6 +13,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  */
 
 private val log = KotlinLogging.logger {}
+
 /**
  * https://bot.q.qq.com/wiki/develop/api-v2/openapi/emoji/model.html#EmojiType
  */
@@ -21,7 +22,7 @@ fun Bot.setMsgEmojiLike(msgId: String, face: String): ActionData<*>? {
         val action = SetEmojiLikeActionPath.SetMsgEmojiLike
         val map = hashMapOf<String, Any>("emoji_id" to face, "message_id" to msgId)
         return this.customRequest(action, map)
-    }catch (ignore: Exception){
+    } catch (ignore: Exception) {
         log.error { "${msgId}贴表情失败" }
     }
     return null
@@ -39,14 +40,14 @@ fun Bot.getGroupMsgHistory(groupId: Long, messageSeq: Int = 0, count: Int): Acti
 
 fun Bot.getImage(file: String): ActionData<GetImageResponse> {
     val action = GetImageActionPath.GetImage
-    val map = hashMapOf<String, Any>("file" to file)
+    val map = hashMapOf<String, Any>("cn/luorenmu/file" to file)
     return this.customRequest(action, map, GetImageResponse::class.java)
 }
 
 
 fun Bot.getRecord(file: String, outFormat: String): ActionData<RecordResponse> {
     val action = GetRecordActionPath.GetRecord
-    val map = hashMapOf<String, Any>("file" to file, "out_format" to outFormat)
+    val map = hashMapOf<String, Any>("cn/luorenmu/file" to file, "out_format" to outFormat)
     return this.customRequest(action, map, RecordResponse::class.java)
 
 }
