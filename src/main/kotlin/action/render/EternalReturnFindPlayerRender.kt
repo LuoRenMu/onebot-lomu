@@ -12,9 +12,9 @@ import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalRet
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalReturnMatchesById
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.tier.EternalReturnTiers
 import cn.luorenmu.action.request.EternalReturnRequestData
+import cn.luorenmu.common.utils.CaffeineUtils
 import cn.luorenmu.common.utils.FreeMarkerUtils
 import cn.luorenmu.common.utils.PathUtils
-import cn.luorenmu.common.utils.RedisUtils
 import cn.luorenmu.common.utils.WebPool
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.service.ImageService
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit
 @Component
 class EternalReturnFindPlayerRender(
     private val eternalReturnRequestData: EternalReturnRequestData,
-    private val redisUtils: RedisUtils,
+    private val caffeineUtils: CaffeineUtils,
     private val imageService: ImageService,
     private val webPool: WebPool,
     @Value("\${server.port}")
@@ -54,14 +54,14 @@ class EternalReturnFindPlayerRender(
         try {
             val parseData = FreeMarkerUtils.parseData("eternal_return_player.ftlh", pageRender)
             log.info { "$nickname 页面图片已生成" }
-            redisUtils.setCache("ftlh:eternal_return_player_data_${userNum}", parseData, 5L, TimeUnit.MINUTES)
+            caffeineUtils.setCache("ftlh:eternal_return_player_data_${userNum}", parseData, 5L, TimeUnit.MINUTES)
             webPool.getWebPageScreenshot()
                 .screenshotSelector(
                     "http://localhost:$port/ftlh/eternal_return_player_data_${userNum}",
                     imgPath,
                     "#content-container"
                 )
-            redisUtils.setCache("nickname:${nickname}", returnMsg, 5L, TimeUnit.MINUTES)
+            caffeineUtils.setCache("nickname:${nickname}", returnMsg, 5L, TimeUnit.MINUTES)
             return returnMsg
         } catch (_: Exception) {
             throw LoMuBotException("无法为其生成数据 -> $nickname")
@@ -408,7 +408,7 @@ class EternalReturnFindPlayerRender(
     private fun getCharacterImgUrl(type: EternalReturnCharacterById.CharacterImgUrlType, id: Int, skin: Long = -1) =
         run {
             imageService.getEternalReturnCharacterImage(type, id, skin)
-            "/images/eternal_return/character/$type/$id/$skin"
+            "/images/eternal_return/character.txt/$type/$id/$skin"
         }
 
     private fun getItemImgUrl(id: Long) = run {

@@ -4,7 +4,7 @@ import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.render.EternalReturnFindPlayerRender
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.common.extensions.getFirstBot
-import cn.luorenmu.common.utils.RedisUtils
+import cn.luorenmu.common.utils.CaffeineUtils
 import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
 import com.mikuac.shiro.common.utils.MsgUtils
@@ -20,7 +20,7 @@ class EternalReturnReFindPlayer(
     private val eternalReturnFindPlayerRender: EternalReturnFindPlayerRender,
     private val botContainer: BotContainer,
     private val eternalReturnRequestData: EternalReturnRequestData,
-    private val redisUtils: RedisUtils,
+    private val caffeineUtils: CaffeineUtils,
 ) : CommandProcess {
     override fun process(sender: MessageSender): String? {
         val nickname = sender.originalMessage(command())
@@ -32,7 +32,7 @@ class EternalReturnReFindPlayer(
         }
 
         botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
-        redisUtils.getCache("nickname:${nickname}", String::class.java)?.let {
+        caffeineUtils.getCache("nickname:${nickname}", String::class.java)?.let {
             return it
         }
         return eternalReturnFindPlayerRender.imageRenderGenerate(nickname)

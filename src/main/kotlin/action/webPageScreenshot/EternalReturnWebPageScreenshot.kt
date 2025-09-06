@@ -3,8 +3,8 @@ package cn.luorenmu.action.webPageScreenshot
 import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
 import cn.luorenmu.action.request.api.HTTPRequest
 import cn.luorenmu.common.extensions.toPinYin
+import cn.luorenmu.common.utils.CaffeineUtils
 import cn.luorenmu.common.utils.PathUtils
-import cn.luorenmu.common.utils.RedisUtils
 import cn.luorenmu.common.utils.WebPool
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.options.WaitUntilState
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
  */
 @Component
 class EternalReturnWebPageScreenshot(
-    private val redisUtils: RedisUtils,
+    private val caffeineUtils: CaffeineUtils,
     private val webPool: WebPool,
 ) {
 
@@ -30,13 +30,14 @@ class EternalReturnWebPageScreenshot(
 
     // 角色页面
     fun webCharacterScreenshot(inputName: String, character: String, weapon: String, failed: Int = 0): String {
-        val cacheName = "Eternal_Return: character :${character}_${inputName.toPinYin()}_${weapon}"
-        redisUtils.getCache(cacheName, String::class.java)?.let {
+        val cacheName = "Eternal_Return: character.txt :${character}_${inputName.toPinYin()}_${weapon}"
+        caffeineUtils.getCache(cacheName, String::class.java)?.let {
             log.info { "命中缓存: $character" }
             return it
         }
 
-        val path = PathUtils.getEternalReturnImagePath("character/${character}-${inputName.toPinYin()}-${weapon}.png")
+        val path =
+            PathUtils.getEternalReturnImagePath("character.txt/${character}-${inputName.toPinYin()}-${weapon}.png")
         log.info { "正在进行截图: $character" }
         val url = EternalReturnDakGGAPI.PageURL.characterPageURL(character, weaponType = weapon)
         try {
@@ -60,7 +61,7 @@ class EternalReturnWebPageScreenshot(
         }
         val returnMsg = MsgUtils.builder().img(path).build()
         log.info { "已完成的截图: $character" }
-        redisUtils.setCacheIfAbsent(cacheName, returnMsg)
+        caffeineUtils.setCacheIfAbsent(cacheName, returnMsg)
         return returnMsg
     }
 
@@ -116,7 +117,7 @@ class EternalReturnWebPageScreenshot(
         val imgPath = PathUtils.getEternalReturnImagePath("character_statistics.png")
         val returnMsg = MsgUtils.builder().img(imgPath).build()
         try {
-            return redisUtils.getCache("Eternal_Return: character_statistics", String::class.java, {
+            return caffeineUtils.getCache("Eternal_Return: character_statistics", String::class.java, {
                 webPool.getWebPageScreenshot()
                     .customizeSelector(
                         EternalReturnDakGGAPI.PageURL.CHARACTER_STATISTICS_URL,

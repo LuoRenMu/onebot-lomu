@@ -22,16 +22,13 @@ spring:
     time-zone: GMT+8
     serialization:
       write-dates-as-timestamps: false
-  data:
-    mongodb:
-      auto-index-creation: true
-      uri: mongodb://192.168.1.104/QQMessage
-    redis:
-      host: 192.168.1.104
   freemarker:
     check-template-location: false
   profiles:
     active: default
 logging:
   file:
-    name: log/latest.log
+    name: latest.log
+web:
+  pool: 2
+  headless: true

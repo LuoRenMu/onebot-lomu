@@ -1,6 +1,6 @@
 package cn.luorenmu.controller
 
-import cn.luorenmu.common.utils.RedisUtils
+import cn.luorenmu.common.utils.CaffeineUtils
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
@@ -13,17 +13,20 @@ import org.springframework.web.bind.annotation.ResponseBody
  */
 @Controller
 class FlthController(
-    private val redisUtils: RedisUtils,
+    private val caffeineUtils: CaffeineUtils,
 ) {
 
     @GetMapping("/ftlh/{id}")
     @ResponseBody
     fun getFtlh(@PathVariable id: String, httpResponse: HttpServletResponse): String {
-        return redisUtils.getCache("ftlh:$id", String::class.java)
+        val cacheKey = "ftlh:$id"
+        val cache = caffeineUtils.getCache(cacheKey, String::class.java)
             ?: run {
                 httpResponse.status = 404
-                "404"
+                return "404"
             }
+        caffeineUtils.deleteCache(cacheKey)
+        return cache
     }
 
 

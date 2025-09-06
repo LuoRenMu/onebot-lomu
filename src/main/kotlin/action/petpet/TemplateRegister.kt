@@ -25,14 +25,18 @@ object TemplateRegister {
         val jsonAll = readDirsAllJson(ReadWriteFile.currentDirs("templates"))
         val petpetTemplates = hashMapOf<String, PetpetTemplate>()
         jsonAll.forEach {
-            val petpetTemplate = if (it.name.contains("template")) {
-                PetpetTemplate.fromJsonFile(it)
-            } else {
-                OldPetpetTemplate.fromJsonFile(it).toTemplate()
-            }
+            try {
+                val petpetTemplate = if (it.name.contains("template")) {
+                    PetpetTemplate.fromJsonFile(it)
+                } else {
+                    OldPetpetTemplate.fromJsonFile(it).toTemplate()
+                }
 
-            for (petpetName in petpetTemplate.metadata.alias) {
-                petpetTemplates[petpetName] = petpetTemplate
+                for (petpetName in petpetTemplate.metadata.alias) {
+                    petpetTemplates[petpetName] = petpetTemplate
+                }
+            } catch (e: Exception) {
+                log.error { "PetPeT无法加载 $it 因为 $e" }
             }
         }
         return petpetTemplates

@@ -17,11 +17,11 @@ import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
 import cn.luorenmu.action.request.api.EternalReturnOfficialAPI
 import cn.luorenmu.action.request.api.HTTPRequest
 import cn.luorenmu.action.request.entity.EternalReturnTraitSkillImgDTO
+import cn.luorenmu.common.utils.CaffeineUtils
 import cn.luorenmu.common.utils.PathUtils
-import cn.luorenmu.common.utils.RedisUtils
-import cn.luorenmu.entity.RequestEntity.RequestDetailed
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.request.RequestController
+import cn.luorenmu.request.entity.RequestEntity.RequestDetailed
 import com.alibaba.fastjson2.JSONException
 import com.alibaba.fastjson2.to
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit
  */
 @Component
 class EternalReturnRequestData(
-    private val redisUtils: RedisUtils,
+    private val caffeineUtils: CaffeineUtils,
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -67,7 +67,7 @@ class EternalReturnRequestData(
      * 段位总览(有哪些段位?)
      */
     fun tiers(): EternalReturnTiers? {
-        return redisUtils.getCache("Eternal_Return: tiers", EternalReturnTiers::class.java, {
+        return caffeineUtils.getCache("Eternal_Return: tiers", EternalReturnTiers::class.java, {
             val resp = HTTPRequest.requestRetry(RequestController(EternalReturnDakGGAPI.Data.tiersV1API()))
             resp?.body().to<EternalReturnTiers>()
         }, 2L, TimeUnit.DAYS)
@@ -121,7 +121,7 @@ class EternalReturnRequestData(
 
 
     fun characterFind(): EternalReturnCharacter? {
-        return redisUtils.getCache("Eternal_Return: characters", EternalReturnCharacter::class.java, {
+        return caffeineUtils.getCache("Eternal_Return: characters", EternalReturnCharacter::class.java, {
             val requestController = RequestController(EternalReturnDakGGAPI.Data.charactersV1API())
             val resp = HTTPRequest.requestRetry(requestController)
             resp!!.body().to<EternalReturnCharacter>()
@@ -129,7 +129,7 @@ class EternalReturnRequestData(
     }
 
     fun season(): EternalReturnSeason? {
-        return redisUtils.getCache("Eternal_Return: season", EternalReturnSeason::class.java, {
+        return caffeineUtils.getCache("Eternal_Return: season", EternalReturnSeason::class.java, {
             val requestCurrentSeason = RequestController(EternalReturnDakGGAPI.Data.seasonV1API())
             val respCurrentSeason = HTTPRequest.requestRetry(requestCurrentSeason)
             respCurrentSeason?.body().to<EternalReturnSeason>()
@@ -211,7 +211,7 @@ class EternalReturnRequestData(
      * 当前赛季的天赋
      */
     fun getTraitSkills(): EternalReturnTraitSkills? {
-        return redisUtils.getCache("Eternal_Return_Trait_Skills", EternalReturnTraitSkills::class.java, {
+        return caffeineUtils.getCache("Eternal_Return_Trait_Skills", EternalReturnTraitSkills::class.java, {
             val requestController = RequestController(
                 EternalReturnDakGGAPI.Data.traitSkillsV1API()
             )
@@ -225,7 +225,7 @@ class EternalReturnRequestData(
      * 闪灵、赤色风暴、激光陀螺
      */
     fun getTacticalSkills(): EternalReturnTacticalSkill? {
-        return redisUtils.getCache("Eternal_Return_Tactical_Skills", EternalReturnTacticalSkill::class.java, {
+        return caffeineUtils.getCache("Eternal_Return_Tactical_Skills", EternalReturnTacticalSkill::class.java, {
             val requestController = RequestController(
                 RequestDetailed().apply {
                     url = "https://er.dakgg.io/api/v1/data/tactical-skills?hl=zh-cn"
@@ -257,7 +257,7 @@ class EternalReturnRequestData(
      * 物品信息 包括英雄装备、武器
      */
     fun getItems(): EternalReturnItemInfos? {
-        return redisUtils.getCache("Eternal_Return_Items", EternalReturnItemInfos::class.java, {
+        return caffeineUtils.getCache("Eternal_Return_Items", EternalReturnItemInfos::class.java, {
             val requestController = RequestController(
                 RequestDetailed().apply {
                     url = "https://er.dakgg.io/api/v1/data/items?hl=zh-cn"
@@ -341,7 +341,7 @@ class EternalReturnRequestData(
      * 所有武器信息
      */
     fun getWeapons(): EternalReturnWeapons? {
-        return redisUtils.getCache("Eternal_Return: weapons", EternalReturnWeapons::class.java, {
+        return caffeineUtils.getCache("Eternal_Return: weapons", EternalReturnWeapons::class.java, {
             val resp = HTTPRequest.requestRetry(RequestController(EternalReturnDakGGAPI.Data.weaponV1API()))
             resp?.body().to<EternalReturnWeapons>()
         }, 2L, TimeUnit.DAYS)
@@ -378,7 +378,7 @@ class EternalReturnRequestData(
             }
         }
         if (retry) {
-            redisUtils.deleteCache("Eternal_Return: characters")
+            caffeineUtils.deleteCache("Eternal_Return: characters")
             getCharacterInfo(id, false)
         }
         throw LoMuBotException("获取英雄信息失败")

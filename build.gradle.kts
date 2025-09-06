@@ -23,7 +23,6 @@ tasks.withType<Test> {
 dependencies {
     implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.microsoft.playwright:playwright:1.42.0")
-
     // 为petpet提供的包支持
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.0")
@@ -49,12 +48,12 @@ dependencies {
     // kotlin官方库 扩展函数协程
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
     // spring
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
     implementation("org.springframework.boot:spring-boot-starter-aop")
     // onebot协议库
     implementation("com.mikuac:shiro:2.3.6")
@@ -81,4 +80,5 @@ tasks.jar {
         attributes["Main-Class"] = "cn.luorenmu.MainApplication"
     }
 }
+
 

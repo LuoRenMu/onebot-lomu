@@ -2,8 +2,8 @@ package cn.luorenmu.action.request.api
 
 import cn.hutool.http.HttpResponse
 import cn.luorenmu.common.utils.PathUtils
-import cn.luorenmu.entity.RequestEntity.RequestDetailed
 import cn.luorenmu.file.ReadWriteFile
+import cn.luorenmu.request.entity.RequestEntity.RequestDetailed
 import java.io.File
 
 /**

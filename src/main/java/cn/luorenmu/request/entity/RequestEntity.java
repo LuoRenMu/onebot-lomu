@@ -1,4 +1,4 @@
-package cn.luorenmu.entity;
+package cn.luorenmu.request.entity;
 
 
 import java.util.List;

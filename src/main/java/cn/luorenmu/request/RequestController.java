@@ -3,8 +3,10 @@ package cn.luorenmu.request;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.Method;
-import cn.luorenmu.entity.RequestEntity;
+import cn.luorenmu.request.entity.RequestEntity;
 import com.alibaba.fastjson2.JSON;
+import io.github.oshai.kotlinlogging.KLogger;
+import io.github.oshai.kotlinlogging.KotlinLogging;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,9 +17,11 @@ import java.util.Map;
  * Date 2024.05.19 15:11
  */
 
+
 public class RequestController {
     private final RequestEntity.RequestDetailed requestDetailed;
     private final HttpRequest httpRequest;
+    private final KLogger log = KotlinLogging.INSTANCE.logger("");
 
     public RequestController(RequestEntity.RequestDetailed requestDetailed) {
         this.requestDetailed = requestDetailed;
@@ -33,9 +37,6 @@ public class RequestController {
         addData();
     }
 
-    public HttpRequest getHttpRequest() {
-        return httpRequest;
-    }
 
     private String buildParamsUrl() {
         if (requestDetailed.getParams() != null && !requestDetailed.getParams().isEmpty()) {
@@ -119,6 +120,9 @@ public class RequestController {
 
 
     public HttpResponse request() {
+        log.info(() ->
+                "http request " + requestDetailed.getMethod() + "->" + requestDetailed.getUrl()
+        );
         HttpRequest request = switch (requestDetailed.getMethod().toLowerCase()) {
             case "post" -> httpRequest.method(Method.POST);
             case "delete" -> httpRequest.method(Method.DELETE);

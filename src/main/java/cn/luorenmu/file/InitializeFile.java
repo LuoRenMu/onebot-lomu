@@ -22,7 +22,4 @@ public class InitializeFile {
         initConfig(clazz);
     }
 
-    public static void main(String[] args) {
-        run(InitializeFile.class);
-    }
 }

@@ -6,7 +6,7 @@ import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.action.request.api.HTTPRequest
 import cn.luorenmu.action.webPageScreenshot.EternalReturnOfficialWebsiteScreenshot
 import cn.luorenmu.common.extensions.getFirstBot
-import cn.luorenmu.common.utils.RedisUtils
+import cn.luorenmu.common.utils.CaffeineUtils
 import cn.luorenmu.file.ReadWriteFile
 import cn.luorenmu.listen.entity.MessageSender
 import com.mikuac.shiro.common.utils.MsgUtils
@@ -29,7 +29,7 @@ import javax.imageio.ImageIO
 @Component("eternalReturnNews")
 class EternalReturnNews(
     private val eternalReturnOfficialWebsiteScreenshot: EternalReturnOfficialWebsiteScreenshot,
-    private val redisUtils: RedisUtils,
+    private val caffeineUtils: CaffeineUtils,
     private val eternalReturnRequestData: EternalReturnRequestData,
     private val botContainer: BotContainer,
 ) : CommandProcess {
@@ -44,7 +44,7 @@ class EternalReturnNews(
         // 匹配到该命令必然存在
         val newsId = regex.find(sender.message)!!.groups[1]!!.value
         val news = eternalReturnRequestData.news(newsId) ?: run { return null }
-        val messages = redisUtils.getCache("news:${newsId}", EternalReturnNewsCache::class.java, {
+        val messages = caffeineUtils.getCache("news:${newsId}", EternalReturnNewsCache::class.java, {
             val path = ReadWriteFile.CURRENT_PATH + "image/eternal_return/news/${newsId}"
             File(path).mkdirs()
             val screenshotPath = eternalReturnOfficialWebsiteScreenshot.screenshotNews(newsId, "${path}/$newsId.png")

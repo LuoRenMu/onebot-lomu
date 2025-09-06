@@ -1,9 +1,9 @@
 package cn.luorenmu.action.request.api
 
 import cn.hutool.http.HttpResponse
-import cn.luorenmu.entity.RequestEntity.RequestDetailed
 import cn.luorenmu.file.ReadWriteFile
 import cn.luorenmu.request.RequestController
+import cn.luorenmu.request.entity.RequestEntity.RequestDetailed
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**

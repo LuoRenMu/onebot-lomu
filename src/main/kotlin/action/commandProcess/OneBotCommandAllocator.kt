@@ -3,12 +3,9 @@ package cn.luorenmu.action.commandProcess
 import cn.luorenmu.common.extensions.getFirstBot
 import cn.luorenmu.common.extensions.isCQReply
 import cn.luorenmu.common.extensions.sendMsg
-import cn.luorenmu.config.file.BlackListManager
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
-import cn.luorenmu.repository.CommandUseHistoryRepository
-import cn.luorenmu.repository.entity.CommandUseHistory
 import com.github.houbb.opencc4j.util.ZhConverterUtil
 import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.Bot
@@ -26,7 +23,6 @@ import org.springframework.stereotype.Component
 class OneBotCommandAllocator(
     applicationContext: ApplicationContext,
     private val bot: BotContainer,
-    private val commandUseHistoryRepository: CommandUseHistoryRepository,
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -74,15 +70,6 @@ class OneBotCommandAllocator(
         commandList.firstOrNull { isCurrentCommand(botId, messageSender.message, it) }
             ?.let { oneBotCommand ->
                 try {
-                    if (!BlackListManager.checkBlackList(messageSender)) {
-                        return
-                    }
-                    commandUseHistoryRepository.save(
-                        CommandUseHistory(
-                            senderInfo = messageSender,
-                            commandName = oneBotCommand.commandName()
-                        )
-                    )
                     send(
                         oneBotCommand.process(messageSender),
                         messageSender.groupOrSenderId,

@@ -3,11 +3,9 @@ package cn.luorenmu.action.draw
 
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
-
+import cn.luorenmu.common.utils.CaffeineUtils
 import cn.luorenmu.common.utils.PathUtils
-import cn.luorenmu.common.utils.RedisUtils
 import cn.luorenmu.utils.DrawImageUtils
-
 import com.mikuac.shiro.common.utils.MsgUtils
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
@@ -24,7 +22,7 @@ import java.util.stream.Collectors
  */
 @Component
 class EternalReturnCutoffsDraw(
-    private val redisUtils: RedisUtils,
+    private val caffeineUtils: CaffeineUtils,
     private val eternalReturnRequestData: EternalReturnRequestData,
 ) {
 
@@ -142,7 +140,7 @@ class EternalReturnCutoffsDraw(
     }
 
     fun cutoffs(): String {
-        return redisUtils.getCache(
+        return caffeineUtils.getCache(
             "Eternal_Return:cutoffs",
             String::class.java,
             { runBlocking { draw() } },

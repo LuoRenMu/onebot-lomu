@@ -1,7 +1,6 @@
 package cn.luorenmu.listen
 
 import cn.luorenmu.action.commandProcess.OneBotCommandAllocator
-import cn.luorenmu.config.file.PermissionsManager
 import cn.luorenmu.listen.entity.BotRole
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
@@ -30,7 +29,7 @@ class PrivateEvenListen(
             privateMessage.userId,
             "?",
             privateMessage.userId,
-            PermissionsManager.botRole(privateMessage.userId, "private"),
+            BotRole.convert("user"),
             privateMessage.messageId,
             privateMessage.message,
             MessageType.PRIVATE,

@@ -1,7 +1,7 @@
 package cn.luorenmu.listen
 
 import cn.luorenmu.action.commandProcess.OneBotCommandAllocator
-import cn.luorenmu.config.file.PermissionsManager
+import cn.luorenmu.listen.entity.BotRole
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
 import com.mikuac.shiro.annotation.GroupMessageHandler
@@ -36,7 +36,7 @@ class GroupEventListen(
             groupId,
             sender.nickname,
             senderId,
-            PermissionsManager.botRole(senderId, sender.role),
+            BotRole.convert(sender.role),
             groupMessageEvent.messageId,
             message,
             MessageType.GROUP,
