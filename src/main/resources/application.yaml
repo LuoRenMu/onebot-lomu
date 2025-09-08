@@ -26,9 +26,6 @@ spring:
     check-template-location: false
   profiles:
     active: default
-logging:
-  file:
-    name: latest.log
 web:
   pool: 2
   headless: true

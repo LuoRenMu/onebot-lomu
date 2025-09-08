@@ -13,7 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  */
 object EternalReturnAliasName {
     fun getCharacterNickName(): AliasNameListEntity {
-        return getNickName("nickname.txt")
+        return getNickName("character.txt")
     }
 
     fun getPlayerNickName(): AliasNameListEntity {

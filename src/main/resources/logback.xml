@@ -1,18 +1,19 @@
 <configuration debug="false">
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
-
+    <property name="LOG_DIR" value="logs"/>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%highlight(%date{yyyy-MM-dd HH:mm:ss} %level/%logger{0} [%thread %L]:) %msg%n</pattern>
         </encoder>
     </appender>
 
+
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!-- 日志文件路径 -->
         <file>${LOG_DIR}/latest.log</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/app-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_DIR}/%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
 
             <totalSizeCap>100MB</totalSizeCap>
@@ -23,5 +24,6 @@
     </appender>
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
     </root>
 </configuration>

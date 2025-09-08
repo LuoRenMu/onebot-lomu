@@ -31,7 +31,7 @@ class BootStrapConfig(
         val initFiles =
             mapOf(
                 "static/images/bg-character.jpg" to PathUtils.getEternalReturnDataImagePath("bg-nickname.jpg"),
-                "static/character.txt" to ReadWriteFile.currentPathFileName("nickname.txt"),
+                "static/character.txt" to ReadWriteFile.currentPathFileName("character.txt"),
                 "static/player.txt" to ReadWriteFile.currentPathFileName("player.txt")
             )
 
