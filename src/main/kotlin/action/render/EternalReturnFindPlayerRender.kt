@@ -38,8 +38,8 @@ class EternalReturnFindPlayerRender(
     private val caffeineUtils: CaffeineUtils,
     private val imageService: ImageService,
     private val webPool: WebPool,
-    @Value("\${server.port}")
-    private val port: String,
+    @Value("\${server.port}") private val port: String,
+    @Value("\${web.render-team}") private val renderTeam: Int,
 ) {
     private val log = KotlinLogging.logger { }
 
@@ -55,12 +55,9 @@ class EternalReturnFindPlayerRender(
             val parseData = FreeMarkerUtils.parseData("eternal_return_player.ftlh", pageRender)
             log.info { "$nickname 页面图片已生成" }
             caffeineUtils.setCache("ftlh:eternal_return_player_data_${userNum}", parseData, 5L, TimeUnit.MINUTES)
-            webPool.getWebPageScreenshot()
-                .screenshotSelector(
-                    "http://localhost:$port/ftlh/eternal_return_player_data_${userNum}",
-                    imgPath,
-                    "#content-container"
-                )
+            webPool.getWebPageScreenshot().screenshotSelector(
+                "http://localhost:$port/ftlh/eternal_return_player_data_${userNum}", imgPath, "#content-container"
+            )
             return returnMsg
         } catch (_: Exception) {
             throw LoMuBotException("无法为其生成数据 -> $nickname")
@@ -151,14 +148,13 @@ class EternalReturnFindPlayerRender(
                     //主页图
                     profileImageUrl = firstSeasonOverview?.characterStats?.maxByOrNull(
                         EternalReturnProfileStat::play
-                    )
-                        ?.let { stats ->
-                            getCharacterImgUrl(
-                                EternalReturnCharacterById.CharacterImgUrlType.ResultImageUrl,
-                                stats.key.toInt(),
-                                stats.skinStats?.maxByOrNull(EternalReturnProfileStat::play)?.key ?: -1L
-                            )
-                        }
+                    )?.let { stats ->
+                        getCharacterImgUrl(
+                            EternalReturnCharacterById.CharacterImgUrlType.ResultImageUrl,
+                            stats.key.toInt(),
+                            stats.skinStats?.maxByOrNull(EternalReturnProfileStat::play)?.key ?: -1L
+                        )
+                    }
 
                     //近期一起玩的人
                     seasonOverviews.firstOrNull { seasonOverview -> seasonOverview.duoStats.isNotEmpty() }
@@ -200,8 +196,7 @@ class EternalReturnFindPlayerRender(
                                     getRP = characterState.mmrGain,
                                     avgRank = "#${
                                         String.format(
-                                            "%.1f",
-                                            characterState.place / characterState.play.toDouble()
+                                            "%.1f", characterState.place / characterState.play.toDouble()
                                         )
                                     }",
                                     avgDmg = if (characterState.damageToPlayer == 0) 0 else characterState.damageToPlayer / characterState.play,
@@ -213,13 +208,11 @@ class EternalReturnFindPlayerRender(
                     firstSeasonOverview?.let { seasonOverview ->
                         if (seasonOverview.mmrStats.isNotEmpty()) {
                             val mmrStats = seasonOverview.mmrStats.take(7).reversed()
-                            playerMMRStats = EternalReturnRender.EternalReturnPlayerMMRStats(
-                                mmrDate = mmrStats.map { mmrs ->
+                            playerMMRStats =
+                                EternalReturnRender.EternalReturnPlayerMMRStats(mmrDate = mmrStats.map { mmrs ->
                                     val dateStr = mmrs.first().toString().substring(4)
                                     dateStr.substring(0, 2) + "/" + dateStr.substring(2)
-                                },
-                                mmr = mmrStats.map { mmrs -> mmrs[1] }
-                            )
+                                }, mmr = mmrStats.map { mmrs -> mmrs[1] })
                         }
                     }
 
@@ -274,14 +267,12 @@ class EternalReturnFindPlayerRender(
             traitSkillUrl = getTraitSkillImgUrl(match.traitFirstCore)
             traitSkillGroupUrl = getTraitSkillImgUrl(match.traitSecondSub.first(), true)
             equips = equipmentConvert(match.equipment.map { it.toLong() }.toList(), match.equipmentGrade)
-            characterAvatarUrl =
-                getCharacterImgUrl(
-                    EternalReturnCharacterById.CharacterImgUrlType.CharProfileImageUrl,
-                    match.characterNum.toInt(),
-                    match.skinCode
-                )
-            characterName =
-                eternalReturnRequestData.getCharacterInfo(match.characterNum.toString()).name
+            characterAvatarUrl = getCharacterImgUrl(
+                EternalReturnCharacterById.CharacterImgUrlType.CharProfileImageUrl,
+                match.characterNum.toInt(),
+                match.skinCode
+            )
+            characterName = eternalReturnRequestData.getCharacterInfo(match.characterNum.toString()).name
             weaponUrl = getWeaponImgUrl(match.bestWeapon)
 
 
@@ -300,8 +291,7 @@ class EternalReturnFindPlayerRender(
         val equips: MutableList<EternalReturnEquip> = mutableListOf()
         for (i in 0 until 5) {
             equips.add(
-                i,
-                EternalReturnEquip(
+                i, EternalReturnEquip(
                     itemUrl = if (i < equipment.size) getItemImgUrl(equipment[i]) else "",
                     itemBgUrl = if (i < equipmentGrade.size) getItemImgBgUrl(equipmentGrade[i]) else ""
                 )
@@ -365,8 +355,7 @@ class EternalReturnFindPlayerRender(
         val count = filter.count()
         val avg = filter.map { it.damageToPlayer }.average().toInt()
         val top1Count = filter.count { it.gameRank == 1 }
-        val winRate =
-            if (top1Count == 0) "0" else String.format("%.2f", top1Count.toDouble() / count.toDouble() * 100)
+        val winRate = if (top1Count == 0) "0" else String.format("%.2f", top1Count.toDouble() / count.toDouble() * 100)
         return "常驻服务器${EternalReturnMatches.serverNameCovert(maxServer)} ${filter.first().matchTypeStr}模式 ${count}场对局 胜率:${winRate}% 平均伤害:${avg}"
     }
 
@@ -378,28 +367,26 @@ class EternalReturnFindPlayerRender(
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
         coroutineScope {
             // 最近一场的排位信息
-            val firstMatchId = matches.matches.firstOrNull { match -> match.matchingMode == 3 }?.gameId
-            matches.matches
-                .forEach { match ->
-                    try {
-                        // 获取队友信息
-                        val teammate = firstMatchId?.let {
-                            if (match.gameId == firstMatchId) {
-                                val seasonID =
-                                    eternalReturnRequestData.season()?.seasons?.first { sea -> sea.key == matches.meta.season }?.id
-                                eternalReturnRequestData.getMatchesById(
-                                    match.gameId.toString(),
-                                    match.nickname,
-                                    seasonID ?: 0
-                                )
-                            } else null
-                        }
-
-                        eternalReturnRender.matches.add(matcherConvert(match, dateFormatter, teammate))
-                    } catch (e: Exception) {
-                        log.error { e.printStackTrace() }
+            val matchIds =
+                matches.matches.filter { match -> match.matchingMode == 3 }.take(renderTeam).map { it.gameId }
+            matches.matches.forEach { match ->
+                try {
+                    // 获取队友信息
+                    val teammate = matchIds.let {
+                        if (matchIds.any { matchId -> matchId == match.gameId }) {
+                            val seasonID =
+                                eternalReturnRequestData.season()?.seasons?.first { sea -> sea.key == matches.meta.season }?.id
+                            eternalReturnRequestData.getMatchesById(
+                                match.gameId.toString(), match.nickname, seasonID ?: 0
+                            )
+                        } else null
                     }
+
+                    eternalReturnRender.matches.add(matcherConvert(match, dateFormatter, teammate))
+                } catch (e: Exception) {
+                    log.error { e.printStackTrace() }
                 }
+            }
         }
     }
 
@@ -407,7 +394,7 @@ class EternalReturnFindPlayerRender(
     private fun getCharacterImgUrl(type: EternalReturnCharacterById.CharacterImgUrlType, id: Int, skin: Long = -1) =
         run {
             imageService.getEternalReturnCharacterImage(type, id, skin)
-            "/images/eternal_return/nickname.txt/$type/$id/$skin"
+            "/images/eternal_return/character/$type/$id/$skin"
         }
 
     private fun getItemImgUrl(id: Long) = run {

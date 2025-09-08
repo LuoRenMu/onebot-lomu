@@ -32,3 +32,5 @@ logging:
 web:
   pool: 2
   headless: true
+  # 加载更多的排位队友信息 (后果降低查询速度)
+  render-team: 1

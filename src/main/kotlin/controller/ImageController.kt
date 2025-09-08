@@ -89,8 +89,6 @@ class ImageController(
         if (`is`) {
             path.skillGroup?.let {
                 return ResponseEntity.ok(InputStreamResource(FileInputStream(path.skillGroup)))
-            } ?: run {
-                return ResponseEntity.ok(InputStreamResource(FileInputStream(path.skill)))
             }
         }
         return ResponseEntity.ok(InputStreamResource(FileInputStream(path.skill)))

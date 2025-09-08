@@ -85,6 +85,12 @@ class OneBotCommandAllocator(
                     )
                 } catch (e: Exception) {
                     log.error { e.stackTraceToString() }
+                    send(
+                        "服务器内部错误",
+                        messageSender.groupOrSenderId,
+                        messageSender.messageId,
+                        messageSender.messageType
+                    )
                 }
             }
     }
