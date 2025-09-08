@@ -5,8 +5,6 @@ import cn.luorenmu.MainApplication
 import cn.luorenmu.action.petpet.TemplateRegister
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.common.utils.WebPool
-import cn.luorenmu.config.entity.CharacterNickNameList
-import cn.luorenmu.config.file.EternalReturnCharacterAliasName
 import cn.luorenmu.file.InitializeFile
 import cn.luorenmu.file.ReadWriteFile
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -32,8 +30,9 @@ class BootStrapConfig(
         InitializeFile.run(MainApplication::class.java)
         val initFiles =
             mapOf(
-                "static/images/bg-character.jpg" to PathUtils.getEternalReturnDataImagePath("bg-character.txt.jpg"),
-                "static/character.txt.txt" to ReadWriteFile.currentPathFileName("character.txt.txt")
+                "static/images/bg-character.jpg" to PathUtils.getEternalReturnDataImagePath("bg-nickname.jpg"),
+                "static/character.txt" to ReadWriteFile.currentPathFileName("nickname.txt"),
+                "static/player.txt" to ReadWriteFile.currentPathFileName("player.txt")
             )
 
         // 生成必要文件
@@ -49,13 +48,9 @@ class BootStrapConfig(
 
     @Bean(destroyMethod = "shutdown")
     fun getWebPageScreenshotPool(): WebPool {
-        return WebPool(pool, true)
+        return WebPool(pool, headless)
     }
 
-    @Bean
-    fun getCharacterNickName(): CharacterNickNameList {
-        return EternalReturnCharacterAliasName.getCharacterNickName()
-    }
 
 }
 

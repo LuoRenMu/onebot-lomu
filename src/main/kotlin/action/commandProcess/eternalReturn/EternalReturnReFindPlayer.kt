@@ -4,7 +4,8 @@ import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.render.EternalReturnFindPlayerRender
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.common.extensions.getFirstBot
-import cn.luorenmu.common.utils.CaffeineUtils
+import cn.luorenmu.config.entity.AliasNameListEntity
+import cn.luorenmu.config.file.EternalReturnAliasName
 import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
 import com.mikuac.shiro.common.utils.MsgUtils
@@ -20,10 +21,16 @@ class EternalReturnReFindPlayer(
     private val eternalReturnFindPlayerRender: EternalReturnFindPlayerRender,
     private val botContainer: BotContainer,
     private val eternalReturnRequestData: EternalReturnRequestData,
-    private val caffeineUtils: CaffeineUtils,
 ) : CommandProcess {
+
+    private val playerNames: AliasNameListEntity = EternalReturnAliasName.getPlayerNickName()
     override fun process(sender: MessageSender): String? {
-        val nickname = sender.originalMessage(command())
+        var nickname = sender.originalMessage(command())
+        for (player in playerNames.aliasNames) {
+            player.alias.firstOrNull { it == nickname }?.let {
+                nickname = player.nickname
+            }
+        }
         if (!eternalReturnRequestData.syncPlayers(nickname)) {
             return MsgUtils.builder().text("不存在的玩家 -> $nickname").build()
         }
@@ -32,9 +39,6 @@ class EternalReturnReFindPlayer(
         }
 
         botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
-        caffeineUtils.getCache("nickname:${nickname}", String::class.java)?.let {
-            return it
-        }
         return eternalReturnFindPlayerRender.imageRenderGenerate(nickname)
     }
 

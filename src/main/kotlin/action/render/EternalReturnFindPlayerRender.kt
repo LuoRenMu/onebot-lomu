@@ -61,7 +61,6 @@ class EternalReturnFindPlayerRender(
                     imgPath,
                     "#content-container"
                 )
-            caffeineUtils.setCache("nickname:${nickname}", returnMsg, 5L, TimeUnit.MINUTES)
             return returnMsg
         } catch (_: Exception) {
             throw LoMuBotException("无法为其生成数据 -> $nickname")
@@ -408,7 +407,7 @@ class EternalReturnFindPlayerRender(
     private fun getCharacterImgUrl(type: EternalReturnCharacterById.CharacterImgUrlType, id: Int, skin: Long = -1) =
         run {
             imageService.getEternalReturnCharacterImage(type, id, skin)
-            "/images/eternal_return/character.txt/$type/$id/$skin"
+            "/images/eternal_return/nickname.txt/$type/$id/$skin"
         }
 
     private fun getItemImgUrl(id: Long) = run {

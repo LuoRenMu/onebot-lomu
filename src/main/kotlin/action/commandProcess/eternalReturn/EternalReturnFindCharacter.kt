@@ -5,8 +5,9 @@ import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.action.webPageScreenshot.EternalReturnWebPageScreenshot
 import cn.luorenmu.common.extensions.getFirstBot
 import cn.luorenmu.common.extensions.toPinYin
-import cn.luorenmu.config.entity.CharacterNickName
-import cn.luorenmu.config.entity.CharacterNickNameList
+import cn.luorenmu.config.entity.AliasName
+import cn.luorenmu.config.entity.AliasNameListEntity
+import cn.luorenmu.config.file.EternalReturnAliasName
 import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
 import com.mikuac.shiro.core.BotContainer
@@ -21,8 +22,8 @@ class EternalReturnFindCharacter(
     private val eternalReturnRequestData: EternalReturnRequestData,
     private val eternalReturnWebPageScreenshot: EternalReturnWebPageScreenshot,
     private val botContainer: BotContainer,
-    private val characterNames: CharacterNickNameList,
 ) : CommandProcess {
+    private val characterNames: AliasNameListEntity = EternalReturnAliasName.getCharacterNickName()
     override fun process(sender: MessageSender): String? {
         var characterName = sender.originalMessage(command())
         val originName = characterName
@@ -48,10 +49,10 @@ class EternalReturnFindCharacter(
             val character = characters.characters.firstOrNull { character ->
                 character.key.lowercase() == characterName.lowercase() || character.name.toPinYin()
                     .lowercase() == characterName.toPinYin().lowercase()
-            }?.key ?: findName?.character
+            }?.key ?: findName?.nickname
 
             val inputName =
-                findName?.nickName?.firstOrNull { it.toPinYin().lowercase() == characterName.toPinYin().lowercase() }
+                findName?.alias?.firstOrNull { it.toPinYin().lowercase() == characterName.toPinYin().lowercase() }
                     ?: characterName
 
             character?.let {
@@ -84,13 +85,13 @@ class EternalReturnFindCharacter(
     /**
      * 查找绰号名
      */
-    fun findName(name: String): CharacterNickName? {
+    fun findName(name: String): AliasName? {
         // &符号会被转换为amp; 适用于 黛比&马莲
         val characterPinYin = name.replace(Regex("amp;"), "").toPinYin().lowercase()
-        val characterNickNames = characterNames.characterNickNames
+        val characterNickNames = characterNames.aliasNames
 
         val character = characterNickNames.firstOrNull { character ->
-            character.nickName.firstOrNull { nickname ->
+            character.alias.firstOrNull { nickname ->
                 characterPinYin == nickname.toPinYin().lowercase()
             } != null
         }

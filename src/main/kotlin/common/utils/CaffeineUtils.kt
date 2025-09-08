@@ -21,7 +21,7 @@ class CaffeineUtils {
     // 使用 Caffeine 构建一个支持过期策略的缓存
     private val cache = Caffeine.newBuilder()
         .maximumSize(1000) // 最多缓存 1000 个条目
-        .expireAfterWrite(1, TimeUnit.DAYS) // 默认写入后过期
+        .expireAfterWrite(30, TimeUnit.SECONDS) // 默认写入后过期
         .build<String, String>()
 
     /**

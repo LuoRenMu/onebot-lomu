@@ -30,14 +30,14 @@ class EternalReturnWebPageScreenshot(
 
     // 角色页面
     fun webCharacterScreenshot(inputName: String, character: String, weapon: String, failed: Int = 0): String {
-        val cacheName = "Eternal_Return: character.txt :${character}_${inputName.toPinYin()}_${weapon}"
+        val cacheName = "Eternal_Return: nickname.txt :${character}_${inputName.toPinYin()}_${weapon}"
         caffeineUtils.getCache(cacheName, String::class.java)?.let {
             log.info { "命中缓存: $character" }
             return it
         }
 
         val path =
-            PathUtils.getEternalReturnImagePath("character.txt/${character}-${inputName.toPinYin()}-${weapon}.png")
+            PathUtils.getEternalReturnImagePath("nickname.txt/${character}-${inputName.toPinYin()}-${weapon}.png")
         log.info { "正在进行截图: $character" }
         val url = EternalReturnDakGGAPI.PageURL.characterPageURL(character, weaponType = weapon)
         try {

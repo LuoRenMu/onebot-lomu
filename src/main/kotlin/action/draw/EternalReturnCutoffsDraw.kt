@@ -67,7 +67,7 @@ class EternalReturnCutoffsDraw(
                 //画上
                 val date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日HH时mm分ss"))
                 val draw = DrawImageUtils.builder()
-                draw.setTemplate(PathUtils.getEternalReturnDataImagePath("bg-character.jpg"))
+                draw.setTemplate(PathUtils.getEternalReturnDataImagePath("bg-nickname.jpg"))
                 draw.setFont("微软雅黑", Font.BOLD)
                 draw.drawString(
                     "${leaderboard.currentSeason?.currentSeason?.name ?: "正式赛季 unknown"}排名",
