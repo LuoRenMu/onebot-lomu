@@ -1,23 +1,36 @@
-# 说明   
-永恒轮回战绩查询机器人 螺母-Bot
+# 说明
 
+永恒轮回战绩查询机器人 ~~螺母-Bot~~
 
-## 项目结构
+## 部署使用
 
-技术栈 ->    
-1.spring websocket   
-2.redis   
-3.mongodb   
-4.kotlin 2.0(java 17)
+    使用OneBot协议框架 NapCat LLOneBot Lagrange.Core
 
-## 技术介绍
-{QQ消息 -> NTqq(oneBotV11) -><- spring framework -> shiro -> commandProcess -> request dak.gg api -> freemarker render -> playwright screenshot}
+1.application.yaml 配置文件
 
-## TODO
+2.character.txt实验体名称映射
 
-- 接入 developer api 不再依赖dak.gg
-- 接入 国服 api
+3.player.txt 玩家名称映射
 
-特别感谢 bilibili-api-collect
+### 表情包生成
 
-由liteLoaderNTQQ OneBotV11 shiro 强力驱动
+该功能完全来自petpet
+使用它 首先需要下载[petpet-template](https://github.com/Dituon/petpet-templates/tree/main/templates)
+
+将其中的templates文件放至根目录即可启用表情包生成
+
+json文件中的alias表示调用命令 需以/开头
+
+所有的调整都需要重启生效
+
+#### 自编辑表情包模板
+
+生成工作不宜展示内容或关于BSER表情包？
+
+请访问[petpet-js](https://github.com/Dituon/petpet-js)
+
+##### 最后
+
+特别感谢 [petpet](https://github.com/Dituon/petpet)、[shiro](https://github.com/MisakaTAT/Shiro/)
+
+由liteLoaderNTQQ OneBotV11 强力驱动
