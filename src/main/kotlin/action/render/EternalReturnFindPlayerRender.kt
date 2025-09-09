@@ -12,10 +12,7 @@ import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalRet
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalReturnMatchesById
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.tier.EternalReturnTiers
 import cn.luorenmu.action.request.EternalReturnRequestData
-import cn.luorenmu.common.utils.CaffeineUtils
-import cn.luorenmu.common.utils.FreeMarkerUtils
-import cn.luorenmu.common.utils.PathUtils
-import cn.luorenmu.common.utils.WebPool
+import cn.luorenmu.common.utils.*
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.service.ImageService
 import com.mikuac.shiro.common.utils.MsgUtils
@@ -45,23 +42,25 @@ class EternalReturnFindPlayerRender(
 
 
     fun imageRenderGenerate(nickname: String): String {
-        val pageRender = runBlocking { pageRender(nickname) }
+        val startTime = System.currentTimeMillis()
+        val pageRender = runBlocking {
+            StringLockUtils.lock("render:$nickname") {
+                pageRender(nickname)
+            }
+        }
         val userNum = pageRender.userNum
-
         val imgPath = PathUtils.getEternalReturnNicknameImagePath("render_$userNum")
         val returnMsg = MsgUtils.builder().img(imgPath).build()
+        val parseData = FreeMarkerUtils.parseData("eternal_return_player.ftlh", pageRender)
 
-        try {
-            val parseData = FreeMarkerUtils.parseData("eternal_return_player.ftlh", pageRender)
-            log.info { "$nickname 页面图片已生成" }
-            caffeineUtils.setCache("ftlh:eternal_return_player_data_${userNum}", parseData, 5L, TimeUnit.MINUTES)
-            webPool.getWebPageScreenshot().screenshotSelector(
-                "http://localhost:$port/ftlh/eternal_return_player_data_${userNum}", imgPath, "#content-container"
-            )
-            return returnMsg
-        } catch (_: Exception) {
-            throw LoMuBotException("无法为其生成数据 -> $nickname")
-        }
+        log.info { "$nickname 页面已生成 耗时:${(System.currentTimeMillis() - startTime) / 1000}秒" }
+        caffeineUtils.setCache("ftlh:eternal_return_player_data_${userNum}", parseData, 5L, TimeUnit.MINUTES)
+        webPool.getWebPageScreenshot().screenshotSelector(
+            "http://localhost:$port/ftlh/eternal_return_player_data_${userNum}", imgPath, "#content-container"
+        )
+        log.info { "$nickname 图片已生成准备发送" }
+        return returnMsg
+
     }
 
     suspend fun pageRender(nickname: String): EternalReturnRender {

@@ -10,6 +10,7 @@ import com.mikuac.shiro.annotation.common.Shiro
 import com.mikuac.shiro.core.Bot
 import com.mikuac.shiro.dto.event.message.PrivateMessageEvent
 import com.mikuac.shiro.dto.event.notice.PrivateMsgDeleteNoticeEvent
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 /**
@@ -21,6 +22,8 @@ import org.springframework.stereotype.Component
 @Shiro
 class PrivateEvenListen(
     private val oneBotCommandAllocator: OneBotCommandAllocator,
+    @Value("\${bot.private:false}")
+    private val private: Boolean,
 ) {
 
     @PrivateMessageHandler
@@ -29,13 +32,15 @@ class PrivateEvenListen(
             privateMessage.userId,
             "?",
             privateMessage.userId,
-            BotRole.convert("user"),
+            BotRole.Member,
             privateMessage.messageId,
             privateMessage.message,
             MessageType.PRIVATE,
             bot.selfId
         )
-        oneBotCommandAllocator.process(bot, messageSender)
+        if (private) {
+            oneBotCommandAllocator.process(bot, messageSender)
+        }
     }
 
     @PrivateMsgDeleteNoticeHandler

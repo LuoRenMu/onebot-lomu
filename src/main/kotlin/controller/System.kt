@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("")
 class System(
     private val eternalReturnRender: EternalReturnFindPlayerRender,
-    ) {
+) {
 
     @GetMapping("/")
     fun system(): String {

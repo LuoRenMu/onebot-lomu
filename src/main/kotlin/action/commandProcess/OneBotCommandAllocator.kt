@@ -12,7 +12,6 @@ import com.mikuac.shiro.core.Bot
 import com.mikuac.shiro.core.BotContainer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.context.ApplicationContext
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 
 /**
@@ -35,7 +34,8 @@ class OneBotCommandAllocator(
         oneBotCommand: CommandProcess,
     ): Boolean {
         val atMe = MsgUtils.builder().at(botId).build()
-        var removeAtAndEmptyCharacterCommand = command.replace(atMe, "").replace(" ", "")
+        // 去除@ 和空字符
+        var originMessage = command.replace(atMe, "").replace(" ", "")
         if (oneBotCommand.needAtBot()) {
             if (!command.contains(atMe)) {
                 return false
@@ -43,12 +43,12 @@ class OneBotCommandAllocator(
         }
 
         // 移除回复
-        if (removeAtAndEmptyCharacterCommand.isCQReply()) {
-            removeAtAndEmptyCharacterCommand =
-                removeAtAndEmptyCharacterCommand.replace("\\[CQ:reply,id=\\d+]".toRegex(), "")
+        if (originMessage.isCQReply()) {
+            originMessage =
+                originMessage.replace("\\[CQ:reply,id=\\d+]".toRegex(), "")
         }
 
-        val userMessage = ZhConverterUtil.toSimple(removeAtAndEmptyCharacterCommand)
+        val userMessage = ZhConverterUtil.toSimple(originMessage)
         return userMessage.contains(oneBotCommand.command())
     }
 
@@ -64,7 +64,7 @@ class OneBotCommandAllocator(
         }
     }
 
-    @Async
+
     fun process(bot: Bot, messageSender: MessageSender) {
         val botId = bot.selfId
         commandList.firstOrNull { isCurrentCommand(botId, messageSender.message, it) }

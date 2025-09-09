@@ -5,7 +5,7 @@ import cn.luorenmu.action.render.EternalReturnFindPlayerRender
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.action.webPageScreenshot.EternalReturnWebPageScreenshot
 import cn.luorenmu.common.extensions.getFirstBot
-import cn.luorenmu.common.extensions.sendGroupMsg
+import cn.luorenmu.common.extensions.sendMsg
 import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
 import com.mikuac.shiro.common.utils.MsgUtils
@@ -44,7 +44,8 @@ class EternalReturnFindPlayer(
             return eternalReturnWebPageScreenshot.webPlayerPageScreenshot(nickname)
         } catch (_: Exception) {
             botContainer.getFirstBot()
-                .sendGroupMsg(
+                .sendMsg(
+                    sender.messageType,
                     sender.groupOrSenderId,
                     MsgUtils.builder().reply(sender.messageId).text("与服务器无法正常连接 正在重试")
                         .build()

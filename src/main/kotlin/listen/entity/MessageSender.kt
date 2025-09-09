@@ -54,7 +54,7 @@ enum class BotRole(val role: String, val roleNumber: Int) {
 
     companion object {
         fun convert(type: String): BotRole {
-            return BotRole.entries.first { it.role == type }
+            return BotRole.entries.firstOrNull { it.role == type } ?: Member
         }
     }
 

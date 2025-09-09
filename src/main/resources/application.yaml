@@ -31,3 +31,6 @@ web:
   headless: true
   # 加载更多的排位队友信息 (后果降低查询速度)
   render-team: 1
+bot:
+  # 私聊支持
+  private: false

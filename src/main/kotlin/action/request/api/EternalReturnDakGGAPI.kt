@@ -2,6 +2,7 @@ package cn.luorenmu.action.request.api
 
 import cn.hutool.http.HttpResponse
 import cn.luorenmu.common.utils.PathUtils
+import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.file.ReadWriteFile
 import cn.luorenmu.request.entity.RequestEntity.RequestDetailed
 import java.io.File
@@ -186,8 +187,8 @@ object EternalReturnDakGGAPI {
                         it.method = "get"
                     }
                 }
-
-            ReadWriteFile.writeStreamFile(outputPath, resp?.bodyStream())
+            resp ?: run { throw LoMuBotException("网络无法正常请求到目标数据") }
+            ReadWriteFile.writeStreamFile(outputPath, resp.bodyStream())
         }
     }
 }

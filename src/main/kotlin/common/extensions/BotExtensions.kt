@@ -32,6 +32,10 @@ fun selfRecentlySent(id: Long, message: String): Boolean {
     }
 }
 
+fun BotContainer.getFirstBot(id: Long): Bot {
+    return this.robots.values.first { it.selfId == id }
+}
+
 fun BotContainer.getFirstBot(): Bot {
     return this.robots.values.first()
 }
@@ -98,7 +102,7 @@ private fun Bot.addToSelfSendMessage(
     val selfSendMsg: SelfSendMsg = if (sendMsg != null && sendMsg.data != null) {
         SelfSendMsg(sendMsg.data.messageId.toLong(), message)
     } else {
-        log.warn { "发送至${id}-${message}返回为null" }
+        log.warn { "发送至${id}-${message}返回为null[这表明onebot框架没有正常的返回数据]" }
         SelfSendMsg(message)
     }
     selfRecentlySendMessage.addMessageToQueue(id, selfSendMsg)
