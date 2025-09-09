@@ -29,7 +29,71 @@ json文件中的alias表示调用命令 需以/开头
 
 请访问[petpet-js](https://github.com/Dituon/petpet-js)
 
-##### 最后
+#### BOT指令
+
+##### 玩家查询
+
+```text
+查询玩家 神圣审判
+查询战绩 神圣审判
+战绩查询 神圣审判
+search 神圣审判
+```
+
+![player.jpg](doc/images/C06920829F1BDDE37283A4B6DD5BC297.jpg)
+
+##### 分数报告
+
+```text
+永恒多少分
+半神多少分
+永恒分段
+半神分段
+```
+
+![cutoffs.png](doc/images/FEADF3E391C5C5C1C861F607827A0BE9.png)
+
+##### 以下命令均为不可靠 依赖网络
+
+`我在学校中的网络测试 都无法正常运行下列指令皆无法运行`
+
+**网页查询玩家**
+
+网页截图
+
+```text
+网页查询玩家 神圣审判
+```
+
+**查询实验体**
+
+支持谐音
+
+```text
+查询角色 杰琪 0/1/2/3
+```
+
+**查询路线**
+
+```text
+查询路线 12345
+routes 12345
+```
+
+**实验体统计**
+
+```text
+实验体统计
+角色统计
+英雄统计
+statistics
+```
+
+**官网更新截图**
+
+```text
+该命令监听https://playeternalreturn.com/posts/news/([0-9]{4,6})形式消息
+```
 
 特别感谢 [petpet](https://github.com/Dituon/petpet)、[shiro](https://github.com/MisakaTAT/Shiro/)
 

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component
 @Component
 class EternalReturnRoutes(
     private val web: EternalReturnWebPageScreenshot,
-    private val botContainer: BotContainer
+    private val botContainer: BotContainer,
 ) : CommandProcess {
 
 
@@ -25,7 +25,7 @@ class EternalReturnRoutes(
         return web.webRoutesPageScreenshot(routesId)
     }
 
-    override fun commandName(): String = "EternalReturnRoutes"
+    override fun commandName(): String = "永恒轮回路线查询"
 
     override fun state(id: Long): Boolean = true
 

@@ -68,7 +68,7 @@ class QQRequestData {
         return avatarPath
     }
 
-    fun getAvatarUrlString(qq: String, size: Int): String {
+    fun getAvatarUrlString(qq: String, size: Int = 640): String {
         return "https://q.qlogo.cn/headimg_dl?dst_uin=${qq}&spec=${size}"
     }
 }

@@ -35,9 +35,7 @@ class PrivateEvenListen(
             MessageType.PRIVATE,
             bot.selfId
         )
-        if (messageSender.role.roleNumber > BotRole.ADMIN.roleNumber) {
-            oneBotCommandAllocator.process(bot, messageSender)
-        }
+        oneBotCommandAllocator.process(bot, messageSender)
     }
 
     @PrivateMsgDeleteNoticeHandler

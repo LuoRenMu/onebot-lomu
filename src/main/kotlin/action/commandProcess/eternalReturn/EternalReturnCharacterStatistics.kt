@@ -22,7 +22,7 @@ class EternalReturnCharacterStatistics(
         return web.webCharacterStatisticsPageScreenshot()
     }
 
-    override fun commandName(): String = "EternalReturnCharacterStatistics"
+    override fun commandName(): String = "永恒轮回角色统计"
 
     override fun state(id: Long): Boolean = true
 

@@ -43,7 +43,7 @@ class EternalReturnReFindPlayer(
     }
 
     override fun commandName(): String {
-        return "查询玩家"
+        return "永恒轮回查询玩家"
     }
 
     override fun state(id: Long): Boolean {

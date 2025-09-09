@@ -18,7 +18,7 @@ class EternalReturnCutoffs(
     }
 
     override fun commandName(): String {
-        return "eternalReturnCutoffs"
+        return "永恒轮回分数报告"
     }
 
     override fun state(id: Long): Boolean {

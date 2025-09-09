@@ -135,7 +135,7 @@ class EternalReturnNews(
         return list
     }
 
-    override fun commandName() = "eternalReturnNews"
+    override fun commandName() = "永恒轮回官网消息转发"
 
     override fun state(id: Long) = true
     override fun command(): Regex = Regex("https://playeternalreturn.com/posts/news/([0-9]{4,6})")

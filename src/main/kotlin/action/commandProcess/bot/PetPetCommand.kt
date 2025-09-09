@@ -58,9 +58,9 @@ class PetPetCommand(
         // 模版存在from并且当前为from的情况下 则是第一条at或第二条at
         if (existsFrom && index == 1) {
             messageSender.message.getAtQQ(1)?.let {
-                return qqRequestData.downloadQQAvatar(it)
+                return qqRequestData.getAvatarUrlString(it)
             }
-            return qqRequestData.downloadQQAvatar(messageSender.senderId.toString())
+            return qqRequestData.getAvatarUrlString(messageSender.senderId.toString())
         }
         // 回复消息
         messageSender.message.getCQReplyMessageId()?.let {
@@ -80,10 +80,10 @@ class PetPetCommand(
 
         // 当前消息为to为at的目标或自己
         messageSender.message.getAtQQ(0)?.let {
-            return qqRequestData.downloadQQAvatar(it)
+            return qqRequestData.getAvatarUrlString(it)
         }
 
-        return qqRequestData.downloadQQAvatar(messageSender.senderId.toString())
+        return qqRequestData.getAvatarUrlString(messageSender.senderId.toString())
     }
 
 
@@ -98,7 +98,7 @@ class PetPetCommand(
         botId = messageSender.botId
     )
 
-    override fun commandName(): String = "EmojiGenerationCommand"
+    override fun commandName(): String = "表情包生成"
 
 
     override fun state(id: Long): Boolean = true

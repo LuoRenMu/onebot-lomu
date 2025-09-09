@@ -100,7 +100,7 @@ class EternalReturnFindCharacter(
     }
 
     override fun commandName(): String {
-        return "eternalReturnFindCharacter"
+        return "永恒轮回实验体查询"
     }
 
     override fun state(id: Long): Boolean {

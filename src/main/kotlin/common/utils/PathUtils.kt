@@ -25,8 +25,6 @@ object PathUtils {
         return path
     }
 
-    fun getVideoPath(name: String): String = ReadWriteFile.currentPathFileName("video/${name}")
-
 
     fun getEternalReturnNicknameImagePath(name: String): String {
         ReadWriteFile.createCurrentDirs("image/eternal_return/nickname/${name}.jpg")

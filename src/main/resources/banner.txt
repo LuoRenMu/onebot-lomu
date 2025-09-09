@@ -3,5 +3,6 @@
 ██      ██    ██ ██ ████ ██ ██    ██ ██████  ██    ██    ██    
 ██      ██    ██ ██  ██  ██ ██    ██ ██   ██ ██    ██    ██    
 ███████  ██████  ██      ██  ██████  ██████   ██████     ██    
-                                                               
+
+by LuoRenMu on Github https://github.com/LuoRenMu/onebot-lomu
                                                                

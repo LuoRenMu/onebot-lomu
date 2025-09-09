@@ -55,7 +55,7 @@ class EternalReturnFindPlayer(
 
 
     override fun commandName(): String {
-        return "网页查询玩家"
+        return "永恒轮回网页查询玩家"
     }
 
     override fun state(id: Long): Boolean {
