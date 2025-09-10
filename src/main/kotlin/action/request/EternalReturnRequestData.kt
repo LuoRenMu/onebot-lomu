@@ -15,75 +15,62 @@ import cn.luorenmu.action.commandProcess.eternalReturn.entity.tier.EternalReturn
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.weapon.EternalReturnWeapons
 import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
 import cn.luorenmu.action.request.api.EternalReturnOfficialAPI
-import cn.luorenmu.action.request.api.HTTPRequest
 import cn.luorenmu.action.request.entity.EternalReturnTraitSkillImgDTO
-import cn.luorenmu.common.utils.CaffeineUtils
+import cn.luorenmu.common.utils.HTTPRequestUtil
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.exception.LoMuBotException
-import cn.luorenmu.request.RequestController
-import cn.luorenmu.request.entity.RequestEntity.RequestDetailed
-import com.alibaba.fastjson2.JSONException
-import com.alibaba.fastjson2.to
-import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.call.*
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 /**
  * @author LoMu
  * Date 2024.08.03 9:11
  */
 @Component
-class EternalReturnRequestData(
-    private val caffeineUtils: CaffeineUtils,
-) {
-    private val log = KotlinLogging.logger {}
+class EternalReturnRequestData {
+
 
     // sync player
-    fun syncPlayers(nickname: String, counter: Int = 0): Boolean {
+    suspend fun syncPlayers(nickname: String, counter: Int = 0): Boolean {
         if (counter == 3) {
             return true
         }
-        val requestController = RequestController(EternalReturnDakGGAPI.Player.syncDataV0API(nickname))
+        val resp = HTTPRequestUtil.call(EternalReturnDakGGAPI.Player.syncDataV0API(nickname))
         try {
-            val request = requestController.request()
-            request?.let {
-                val body = request.body()
-                if (body.contains("retry_after")) {
-                    return syncPlayers(nickname, counter + 1)
-                }
-                if (body.contains("invalid name")) {
-                    return false
-                }
-                return !body.contains("not_found")
+            val body = resp.body<String>()
+            if (body.contains("retry_after")) {
+                return syncPlayers(nickname, counter + 1)
             }
+            if (body.contains("invalid name")) {
+                return false
+            }
+            return !body.contains("not_found")
+
         } catch (_: Exception) {
             return true
         }
-        return true
     }
 
     /**
      * 段位总览(有哪些段位?)
      */
-    fun tiers(): EternalReturnTiers? {
-        return caffeineUtils.getCache("Eternal_Return: tiers", EternalReturnTiers::class.java, {
-            val resp = HTTPRequest.requestRetry(RequestController(EternalReturnDakGGAPI.Data.tiersV1API()))
-            resp?.body().to<EternalReturnTiers>()
-        }, 2L, TimeUnit.DAYS)
+    fun tiers(): EternalReturnTiers {
+        return HTTPRequestUtil.requestCacheJson<EternalReturnTiers>("Tiers", EternalReturnDakGGAPI.Data.tiersV1API())
     }
 
     /**
-     * 匹配
+     * 匹配 不缓存数据
      */
-    fun matches(
+    suspend fun matches(
         nickname: String,
         season: String,
         matchingMode: String = "ALL",
         teamMode: String = "ALL",
         page: Int = 1,
-    ): EternalReturnMatches? {
-        val requestController = RequestController(
+    ): EternalReturnMatches {
+        return HTTPRequestUtil.callDTO<EternalReturnMatches>(
             EternalReturnDakGGAPI.Player.matchesV1API(
                 nickname = nickname,
                 season = season,
@@ -92,72 +79,56 @@ class EternalReturnRequestData(
                 page = page,
             )
         )
-        val resp = HTTPRequest.requestRetry(requestController)
-        return resp?.body().to<EternalReturnMatches>()
     }
 
     /**
      * 段位分布
      */
-    fun tierDistributionsFind(): EternalReturnTierDistributions? {
-        val resp =
-            HTTPRequest.requestRetry(RequestController(EternalReturnDakGGAPI.Statistics.tierDistributionV0API()))
-        return resp?.body().to<EternalReturnTierDistributions>()
-
+    fun tierDistributionsFind(): EternalReturnTierDistributions {
+        return HTTPRequestUtil.requestCacheJson<EternalReturnTierDistributions>(
+            "TierDistributions",
+            EternalReturnDakGGAPI.Statistics.tierDistributionV0API()
+        )
     }
 
-    fun leaderboardFind(): EternalReturnLeaderboard? {
-        return season()?.let {
-            val requestLeaderboard =
-                RequestController(EternalReturnDakGGAPI.Leaderboard.leaderboardV0API(it.currentSeason.key))
-            val respLeaderboard = requestLeaderboard.request()
-            respLeaderboard?.let { resp ->
-                val leaderboard = resp.body().to<EternalReturnLeaderboard>()
-                leaderboard.currentSeason = it
-                leaderboard
-            }
+
+    fun leaderboardFind(): EternalReturnLeaderboard {
+        return season().let { season ->
+            val leaderboard = HTTPRequestUtil.requestCacheJson<EternalReturnLeaderboard>(
+                "Leaderboard",
+                EternalReturnDakGGAPI.Leaderboard.leaderboardV0API(season.currentSeason.key)
+            )
+            leaderboard.currentSeason = season
+            leaderboard
         }
     }
 
 
-    fun characterFind(): EternalReturnCharacter? {
-        return caffeineUtils.getCache("Eternal_Return: characters", EternalReturnCharacter::class.java, {
-            val requestController = RequestController(EternalReturnDakGGAPI.Data.charactersV1API())
-            val resp = HTTPRequest.requestRetry(requestController)
-            resp!!.body().to<EternalReturnCharacter>()
-        }, 2L, TimeUnit.DAYS)
+    fun characterFind(): EternalReturnCharacter {
+        return HTTPRequestUtil.requestCacheJson<EternalReturnCharacter>(
+            "Characters",
+            EternalReturnDakGGAPI.Data.charactersV1API()
+        )
     }
 
-    fun season(): EternalReturnSeason? {
-        return caffeineUtils.getCache("Eternal_Return: season", EternalReturnSeason::class.java, {
-            val requestCurrentSeason = RequestController(EternalReturnDakGGAPI.Data.seasonV1API())
-            val respCurrentSeason = HTTPRequest.requestRetry(requestCurrentSeason)
-            respCurrentSeason?.body().to<EternalReturnSeason>()
-        }, 1L, TimeUnit.DAYS)
+    fun season(): EternalReturnSeason {
+        return HTTPRequestUtil.requestCacheJson<EternalReturnSeason>("Season", EternalReturnDakGGAPI.Data.seasonV1API())
     }
 
 
-    fun profile(name: String, season: String = ""): EternalReturnProfile? {
-        val requestProfile = RequestController(EternalReturnDakGGAPI.Player.profileV1API(name, season))
-        val resp = HTTPRequest.requestRetry(requestProfile)
-        return try {
-            resp?.body().to<EternalReturnProfile>()
-        } catch (e: JSONException) {
-            log.error { e.printStackTrace() }
-            null
-        }
+    /**
+     * 玩家信息 不缓存
+     */
+    suspend fun profile(name: String, season: String = ""): EternalReturnProfile {
+        return HTTPRequestUtil.callDTO<EternalReturnProfile>(EternalReturnDakGGAPI.Player.profileV1API(name, season))
     }
 
     /**
      * 永恒轮回官网新聞
      */
-    fun news(id: String): String? {
-        val requestProfile = RequestController(EternalReturnOfficialAPI.news(id))
-        val resp = requestProfile.request()
-        if (resp.status != 200) {
-            return null
-        }
-        return resp?.body()
+    fun news(id: String): String {
+        return runBlocking { HTTPRequestUtil.callDTO<String>(EternalReturnOfficialAPI.news(id)) }
+
     }
 
 
@@ -167,15 +138,15 @@ class EternalReturnRequestData(
      * @param nickname
      * @param seasonId 赛季id
      */
-    suspend fun getMatchesById(id: String, nickname: String, seasonId: Int): EternalReturnMatchesById? {
-        val resp = HTTPRequest.requestRetry(
+    suspend fun getMatchesById(id: String, nickname: String, seasonId: Int): EternalReturnMatchesById {
+        return HTTPRequestUtil.requestCacheJson<EternalReturnMatchesById>(
+            "MatchesID:$id",
             EternalReturnDakGGAPI.Player.matchById(
                 nickname = nickname,
                 seasonId = seasonId,
                 id = id
             )
         )
-        return resp?.body().to<EternalReturnMatchesById>()
     }
 
 
@@ -189,7 +160,7 @@ class EternalReturnRequestData(
     suspend fun getTraitSkillsIcon(id: Long): EternalReturnTraitSkillImgDTO {
         val skillPath = PathUtils.getEternalReturnDataImagePath("ico/TraitSkillsIcon/${id}.png")
         val traitSkills = getTraitSkills()
-        traitSkills!!.let { skills ->
+        traitSkills.let { skills ->
             val skill = skills.traitSkills.first { it.id == id }
             val skillGroup = skills.traitSkillGroups.firstOrNull { skill.group == it.key }
             var skillGroupPath: String? = null
@@ -210,31 +181,23 @@ class EternalReturnRequestData(
     /**
      * 当前赛季的天赋
      */
-    fun getTraitSkills(): EternalReturnTraitSkills? {
-        return caffeineUtils.getCache("Eternal_Return_Trait_Skills", EternalReturnTraitSkills::class.java, {
-            val requestController = RequestController(
-                EternalReturnDakGGAPI.Data.traitSkillsV1API()
-            )
-            val resp = HTTPRequest.requestRetry(requestController)
-            resp?.body().to<EternalReturnTraitSkills>()
-        }, 1L, TimeUnit.DAYS)
+    fun getTraitSkills(): EternalReturnTraitSkills {
+        return HTTPRequestUtil.requestCacheJson<EternalReturnTraitSkills>(
+            "Trait",
+            EternalReturnDakGGAPI.Data.traitSkillsV1API()
+        )
+
     }
 
     /**
      * 实验体技能(召唤师技能)
      * 闪灵、赤色风暴、激光陀螺
      */
-    fun getTacticalSkills(): EternalReturnTacticalSkill? {
-        return caffeineUtils.getCache("Eternal_Return_Tactical_Skills", EternalReturnTacticalSkill::class.java, {
-            val requestController = RequestController(
-                RequestDetailed().apply {
-                    url = "https://er.dakgg.io/api/v1/data/tactical-skills?hl=zh-cn"
-                    method = "GET"
-                }
-            )
-            val resp = HTTPRequest.requestRetry(requestController)
-            resp?.body().to<EternalReturnTacticalSkill>()
-        }, 1L, TimeUnit.DAYS)
+    fun getTacticalSkills(): EternalReturnTacticalSkill {
+        return HTTPRequestUtil.requestCacheJson<EternalReturnTacticalSkill>(
+            "TacticalSkills",
+            EternalReturnDakGGAPI.Data.tacticalSkillsV1API()
+        )
     }
 
     /**
@@ -243,10 +206,9 @@ class EternalReturnRequestData(
     suspend fun getTacticalSkillIcon(id: Long): String {
         val skillPath = PathUtils.getEternalReturnDataImagePath("ico/TacticalSkillIcon/${id}.png")
         if (!File(skillPath).exists()) {
-            getTacticalSkills()?.let { skill ->
-                skill.tacticalSkills.first { it.id == id }.let { idSkill ->
-                    EternalReturnDakGGAPI.Download.downloadUrlStream(idSkill.imageUrl, skillPath)
-                }
+            val skill = getTacticalSkills()
+            skill.tacticalSkills.first { it.id == id }.let { idSkill ->
+                EternalReturnDakGGAPI.Download.downloadUrlStream(idSkill.imageUrl, skillPath)
             }
         }
         return skillPath
@@ -257,16 +219,10 @@ class EternalReturnRequestData(
      * 物品信息 包括英雄装备、武器
      */
     fun getItems(): EternalReturnItemInfos? {
-        return caffeineUtils.getCache("Eternal_Return_Items", EternalReturnItemInfos::class.java, {
-            val requestController = RequestController(
-                RequestDetailed().apply {
-                    url = "https://er.dakgg.io/api/v1/data/items?hl=zh-cn"
-                    method = "GET"
-                }
-            )
-            val resp = HTTPRequest.requestRetry(requestController)
-            resp?.body().to<EternalReturnItemInfos>()
-        })
+        return HTTPRequestUtil.requestCacheJson<EternalReturnItemInfos>(
+            "ItemInfos",
+            EternalReturnDakGGAPI.Data.itemInfosV1API()
+        )
     }
 
     /**
@@ -340,11 +296,11 @@ class EternalReturnRequestData(
     /**
      * 所有武器信息
      */
-    fun getWeapons(): EternalReturnWeapons? {
-        return caffeineUtils.getCache("Eternal_Return: weapons", EternalReturnWeapons::class.java, {
-            val resp = HTTPRequest.requestRetry(RequestController(EternalReturnDakGGAPI.Data.weaponV1API()))
-            resp?.body().to<EternalReturnWeapons>()
-        }, 2L, TimeUnit.DAYS)
+    fun getWeapons(): EternalReturnWeapons {
+        return HTTPRequestUtil.requestCacheJson<EternalReturnWeapons>(
+            "Weapons",
+            EternalReturnDakGGAPI.Data.weaponV1API()
+        )
     }
 
     /**
@@ -356,7 +312,7 @@ class EternalReturnRequestData(
         val eternalReturnDataImagePath =
             PathUtils.getEternalReturnDataImagePath("ico/WeaponsIcon/${id}.png")
         if (!File(eternalReturnDataImagePath).exists()) {
-            getWeapons()?.let { weapons ->
+            getWeapons().let { weapons ->
                 val iconUrl = weapons.masteries.first { it.id == id }.iconUrl
                 EternalReturnDakGGAPI.Download.downloadUrlStream(iconUrl, eternalReturnDataImagePath)
             }
@@ -369,19 +325,29 @@ class EternalReturnRequestData(
      *  无法获取到具体的英雄
      */
     suspend fun getCharacterInfo(id: String, retry: Boolean = true): EternalReturnCharacterById {
-        characterFind()?.let { character ->
+        characterFind().let { character ->
+            var characterInfo: EternalReturnCharacterById? = null
+
+            // 是英雄数字ID
             if (id.matches(Regex("^\\d+$"))) {
-                return character.characters.first { it.id == id.toInt() }
+                characterInfo = character.characters.firstOrNull { it.id == id.toInt() }
             }
-            return character.characters.firstOrNull { it.key == id } ?: run {
-                character.characters.first { it.name == id }
+            characterInfo ?: run {
+                characterInfo = character.characters.firstOrNull { it.key == id } ?: run {
+                    character.characters.firstOrNull { it.name == id }
+                }
             }
+            characterInfo?.let {
+                return it
+            }
+
+            // 角色肯能发生了更新
+            if (retry) {
+                HTTPRequestUtil.jsonCache.invalidate("Characters")
+                return getCharacterInfo(id, false)
+            }
+            throw LoMuBotException("获取英雄信息失败")
         }
-        if (retry) {
-            caffeineUtils.deleteCache("Eternal_Return: characters")
-            getCharacterInfo(id, false)
-        }
-        throw LoMuBotException("获取英雄信息失败")
     }
 
 }

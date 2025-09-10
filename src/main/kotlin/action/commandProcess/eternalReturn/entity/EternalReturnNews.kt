@@ -1,12 +1,14 @@
 package action.commandProcess.eternalReturn.entity
 
 import com.alibaba.fastjson2.annotation.JSONField
+import kotlinx.serialization.Serializable
 
 /**
  * @author LoMu
  * Date 2024.09.01 13:27
  */
 
+@Serializable
 data class EternalReturnNews(
     @JSONField(name = "per_page")
     val perPage: Int,
@@ -24,6 +26,7 @@ data class EternalReturnNews(
     val articles: List<EternalReturnArticle>,
 )
 
+@Serializable
 data class EternalReturnArticle(
     @JSONField(name = "id")
     val id: Int,
@@ -59,11 +62,13 @@ data class EternalReturnArticle(
     val i18ns: EternalReturnI18ns,
 )
 
+@Serializable
 data class EternalReturnI18ns(
     @JSONField(name = "zh_CN")
     val zhCN: EternalReturnI18nsZHCN,
 )
 
+@Serializable
 data class EternalReturnI18nsZHCN(
     @JSONField(name = "locale")
     val locale: String,

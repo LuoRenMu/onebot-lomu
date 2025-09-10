@@ -1,16 +1,14 @@
 package cn.luorenmu.config
 
-import cn.hutool.core.io.resource.ResourceUtil
-import cn.luorenmu.MainApplication
 import cn.luorenmu.action.petpet.TemplateRegister
 import cn.luorenmu.common.utils.PathUtils
+import cn.luorenmu.common.utils.ReadWriteFile
 import cn.luorenmu.common.utils.WebPool
-import cn.luorenmu.file.InitializeFile
-import cn.luorenmu.file.ReadWriteFile
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.ResourceLoader
 
 /**
  * @author LoMu
@@ -25,9 +23,9 @@ class BootStrapConfig(
     private val pool: Int,
     @Value("\${web.headless:true}")
     private val headless: Boolean,
+    private val resourceLoader: ResourceLoader,
 ) {
     init {
-        InitializeFile.run(MainApplication::class.java)
         val initFiles =
             mapOf(
                 "static/images/bg-character.jpg" to PathUtils.getEternalReturnDataImagePath("bg-nickname.jpg"),
@@ -37,7 +35,7 @@ class BootStrapConfig(
 
         // 生成必要文件
         for (file in initFiles) {
-            ResourceUtil.getResource(file.key).openStream().buffered().use {
+            resourceLoader.getResource("classpath:" + file.key).inputStream.buffered().use {
                 ReadWriteFile.writeStreamFile(file.value, it)
             }
         }

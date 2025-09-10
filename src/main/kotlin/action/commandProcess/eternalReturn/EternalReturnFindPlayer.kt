@@ -10,6 +10,7 @@ import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
 import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.BotContainer
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
 
 /**
@@ -36,21 +37,23 @@ class EternalReturnFindPlayer(
             return MsgUtils.builder().text("名称不合法 -> $nickname").build()
         }
 
-        if (!eternalReturnRequestData.syncPlayers(nickname)) {
-            return MsgUtils.builder().text("不存在的玩家 -> $nickname").build()
-        }
-        botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
-        try {
-            return eternalReturnWebPageScreenshot.webPlayerPageScreenshot(nickname)
-        } catch (_: Exception) {
-            botContainer.getFirstBot()
-                .sendMsg(
-                    sender.messageType,
-                    sender.groupOrSenderId,
-                    MsgUtils.builder().reply(sender.messageId).text("与服务器无法正常连接 正在重试")
-                        .build()
-                )
-            return eternalReturnFindPlayerRender.imageRenderGenerate(nickname)
+        return runBlocking {
+            if (!eternalReturnRequestData.syncPlayers(nickname)) {
+                return@runBlocking MsgUtils.builder().text("不存在的玩家 -> $nickname").build()
+            }
+            botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
+            try {
+                return@runBlocking eternalReturnWebPageScreenshot.webPlayerPageScreenshot(nickname)
+            } catch (_: Exception) {
+                botContainer.getFirstBot()
+                    .sendMsg(
+                        sender.messageType,
+                        sender.groupOrSenderId,
+                        MsgUtils.builder().reply(sender.messageId).text("与服务器无法正常连接 正在重试")
+                            .build()
+                    )
+                return@runBlocking eternalReturnFindPlayerRender.imageRenderGenerate(nickname)
+            }
         }
     }
 

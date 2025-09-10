@@ -1,8 +1,8 @@
 package cn.luorenmu.config.file
 
+import cn.luorenmu.common.utils.ReadWriteFile
 import cn.luorenmu.config.entity.AliasName
 import cn.luorenmu.config.entity.AliasNameListEntity
-import cn.luorenmu.file.ReadWriteFile
 import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 

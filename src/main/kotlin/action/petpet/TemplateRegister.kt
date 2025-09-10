@@ -1,6 +1,6 @@
 package cn.luorenmu.action.petpet
 
-import cn.luorenmu.file.ReadWriteFile
+import cn.luorenmu.common.utils.ReadWriteFile
 import io.github.oshai.kotlinlogging.KotlinLogging
 import moe.dituon.petpet.old_template.OldPetpetTemplate
 import moe.dituon.petpet.template.PetpetTemplate
@@ -36,7 +36,7 @@ object TemplateRegister {
                     petpetTemplates[petpetName] = petpetTemplate
                 }
             } catch (e: Exception) {
-                log.error { "PetPeT无法加载 $it 因为 $e" }
+                log.error { "PetPeT无法加载 $it 模板 因为 $e" }
             }
         }
         return petpetTemplates

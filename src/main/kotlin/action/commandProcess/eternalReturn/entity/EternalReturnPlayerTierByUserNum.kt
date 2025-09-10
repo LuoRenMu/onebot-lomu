@@ -1,9 +1,12 @@
-package cn.luorenmu.action.commandProcess.eternalReturn.entiy
+package cn.luorenmu.action.commandProcess.eternalReturn.entity
+
+import kotlinx.serialization.Serializable
 
 /**
  * @author LoMu
  * Date 2024.07.31 9:23
  */
+@Serializable
 data class EternalReturnPlayerTierByUserNum(
     val imageUrl: String,
     val lp: Int,

@@ -1,16 +1,18 @@
 package cn.luorenmu.action.webPageScreenshot
 
 import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
-import cn.luorenmu.action.request.api.HTTPRequest
 import cn.luorenmu.common.extensions.toPinYin
-import cn.luorenmu.common.utils.CaffeineUtils
+import cn.luorenmu.common.utils.HTTPRequestUtil
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.common.utils.WebPool
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.options.WaitUntilState
 import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.common.utils.OneBotMedia
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
@@ -21,19 +23,21 @@ import java.util.concurrent.TimeUnit
  */
 @Component
 class EternalReturnWebPageScreenshot(
-    private val caffeineUtils: CaffeineUtils,
     private val webPool: WebPool,
 ) {
-
+    private val cache: Cache<String, String> = Caffeine.newBuilder()
+        .maximumSize(100)
+        .expireAfterWrite(12, TimeUnit.HOURS)
+        .build()
     private val log = KotlinLogging.logger { }
 
 
     // 角色页面
     fun webCharacterScreenshot(inputName: String, character: String, weapon: String, failed: Int = 0): String {
         val cacheName = "Eternal_Return: nickname :${character}_${inputName.toPinYin()}_${weapon}"
-        caffeineUtils.getCache(cacheName, String::class.java)?.let {
+        cache.getIfPresent(cacheName)?.let {
             log.info { "命中缓存: $character" }
-            return it
+            return cacheName
         }
 
         val path =
@@ -61,7 +65,7 @@ class EternalReturnWebPageScreenshot(
         }
         val returnMsg = MsgUtils.builder().img(path).build()
         log.info { "已完成的截图: $character" }
-        caffeineUtils.setCacheIfAbsent(cacheName, returnMsg)
+        cache.put(cacheName, returnMsg)
         return returnMsg
     }
 
@@ -88,13 +92,12 @@ class EternalReturnWebPageScreenshot(
         val requestUrl = EternalReturnDakGGAPI.PageURL.ROUTES_URL + routesId
 
         if (failed == 0) {
-            val request = HTTPRequest.requestRetry {
-                it.url = requestUrl
-                it.method = "GET"
-            }
-            if (request?.status == 307) {
-                return "未找到该路线"
-            }
+            runBlocking {
+                val resp = HTTPRequestUtil.call(requestUrl)
+                return@runBlocking if (resp.status.value == 307) {
+                    "未找到该路线"
+                } else null
+            }?.let { return it }
         }
 
         try {
@@ -116,8 +119,9 @@ class EternalReturnWebPageScreenshot(
     fun webCharacterStatisticsPageScreenshot(failed: Int = 0): String {
         val imgPath = PathUtils.getEternalReturnImagePath("character_statistics.png")
         val returnMsg = MsgUtils.builder().img(imgPath).build()
+        val cacheName = "Eternal_Return: character_statistics"
         try {
-            return caffeineUtils.getCache("Eternal_Return: character_statistics", String::class.java, {
+            return cache.get(cacheName) {
                 webPool.getWebPageScreenshot()
                     .customizeSelector(
                         EternalReturnDakGGAPI.PageURL.CHARACTER_STATISTICS_URL,
@@ -133,7 +137,7 @@ class EternalReturnWebPageScreenshot(
                         )
                     }
                 returnMsg
-            }, 1L, TimeUnit.DAYS) ?: returnMsg
+            } ?: returnMsg
         } catch (_: Exception) {
             if (failed < 3) {
                 log.error { "页面截图:失败$failed 次 再次重试 Statistics" }

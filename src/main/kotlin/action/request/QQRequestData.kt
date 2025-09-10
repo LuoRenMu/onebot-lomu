@@ -1,10 +1,12 @@
 package cn.luorenmu.action.request
 
-import cn.luorenmu.action.request.api.HTTPRequest
+import cn.luorenmu.common.utils.HTTPRequestUtil
+import cn.luorenmu.common.utils.ReadWriteFile
 import cn.luorenmu.exception.LoMuBotException
-import cn.luorenmu.file.ReadWriteFile
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.statement.*
 import org.springframework.stereotype.Component
+import java.io.ByteArrayInputStream
 import java.io.File
 
 
@@ -24,7 +26,7 @@ class QQRequestData {
     /**
      * 下载qq头像
      */
-    fun downloadQQAvatar(qq: String): String {
+    suspend fun downloadQQAvatar(qq: String): String {
         val avatarPath = ReadWriteFile.currentPathFileName("image/qq/avatar/${qq}.png")
         // 保证图片为最新
         synchronized(QQRequestData::class.java) {
@@ -41,29 +43,17 @@ class QQRequestData {
 
         val requestUrl = getAvatarUrlString(qq, 640)
         try {
-            val resp = HTTPRequest.requestRetry {
-                it.url = requestUrl
-                it.method = "GET"
-            }
-            resp ?: run {
-                throw LoMuBotException("获取qq头像失败")
-            }
+            val resp = HTTPRequestUtil.call(requestUrl)
             // 通过响应头判断是否存在当前分辨率图片
-            if (resp.header("Cache-Control") == "no-cache") {
-                val resp = HTTPRequest.requestRetry {
-                    it.url = requestUrl.substring(0, requestUrl.length - 3) + "100"
-                    it.method = "GET"
-                }
-                resp ?: run {
-                    throw LoMuBotException("获取qq头像失败")
-                }
-                ReadWriteFile.writeStreamFile(avatarPath, resp.bodyStream())
+            if (resp.headers["Cache-Control"] == "no-cache") {
+                val resp = HTTPRequestUtil.call(requestUrl.substring(0, requestUrl.length - 3) + "100")
+                ReadWriteFile.writeStreamFile(avatarPath, ByteArrayInputStream(resp.bodyAsBytes()))
                 return avatarPath
             }
-            ReadWriteFile.writeStreamFile(avatarPath, resp.bodyStream())
+            ReadWriteFile.writeStreamFile(avatarPath, ByteArrayInputStream(resp.bodyAsBytes()))
         } catch (e: Exception) {
-            log.error { e }
-            throw LoMuBotException("获取qq头像失败->")
+            log.error { "获取qq头像失败 ${e.printStackTrace()}" }
+            throw LoMuBotException("获取qq头像失败o(╥﹏╥)o")
         }
         return avatarPath
     }

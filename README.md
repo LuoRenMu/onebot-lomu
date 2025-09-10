@@ -25,7 +25,7 @@ json文件中的alias表示调用命令 需以/开头
 
 #### 自编辑表情包模板
 
-生成工作不宜展示内容或关于BSER表情包？
+生成公共场合不宜展示内容或关于BSER表情包？
 
 请访问[petpet-js](https://github.com/Dituon/petpet-js)
 

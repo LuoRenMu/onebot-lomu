@@ -12,7 +12,6 @@ import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalRet
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalReturnMatchesById
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.tier.EternalReturnTiers
 import cn.luorenmu.action.request.EternalReturnRequestData
-import cn.luorenmu.common.utils.*
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.service.ImageService
 import com.mikuac.shiro.common.utils.MsgUtils
@@ -23,7 +22,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 
 /**
  * @author LoMu
@@ -32,10 +30,8 @@ import java.util.concurrent.TimeUnit
 @Component
 class EternalReturnFindPlayerRender(
     private val eternalReturnRequestData: EternalReturnRequestData,
-    private val caffeineUtils: CaffeineUtils,
     private val imageService: ImageService,
-    private val webPool: WebPool,
-    @Value("\${server.port}") private val port: String,
+    private val render: FTLHRender,
     @Value("\${web.render-team}") private val renderTeam: Int,
 ) {
     private val log = KotlinLogging.logger { }
@@ -44,39 +40,23 @@ class EternalReturnFindPlayerRender(
     fun imageRenderGenerate(nickname: String): String {
         val startTime = System.currentTimeMillis()
         val pageRender = runBlocking {
-            StringLockUtils.lock("render:$nickname") {
-                pageRender(nickname)
-            }
+            pageRender(nickname)
         }
-        val userNum = pageRender.userNum
-        val imgPath = PathUtils.getEternalReturnNicknameImagePath("render_$userNum")
+        log.info { "$nickname 网络数据请求耗时:${(System.currentTimeMillis() - startTime) / 1000}秒" }
+        val imgPath = render.generateEternalReturnFindPlayerFTLHImage(pageRender)
         val returnMsg = MsgUtils.builder().img(imgPath).build()
-        val parseData = FreeMarkerUtils.parseData("eternal_return_player.ftlh", pageRender)
-
-        log.info { "$nickname 页面已生成 耗时:${(System.currentTimeMillis() - startTime) / 1000}秒" }
-        caffeineUtils.setCache("ftlh:eternal_return_player_data_${userNum}", parseData, 5L, TimeUnit.MINUTES)
-        webPool.getWebPageScreenshot().screenshotSelector(
-            "http://localhost:$port/ftlh/eternal_return_player_data_${userNum}", imgPath, "#content-container"
-        )
         log.info { "$nickname 图片已生成准备发送" }
         return returnMsg
 
     }
 
     suspend fun pageRender(nickname: String): EternalReturnRender {
-        val currentSeason = eternalReturnRequestData.season()?.currentSeason
+        val currentSeason = eternalReturnRequestData.season().currentSeason
 
-        val currentSeasonKey = currentSeason?.key ?: run {
-            throw LoMuBotException("无法获取当前赛季")
-        }
+        val currentSeasonKey = currentSeason.key
         val profile = eternalReturnRequestData.profile(nickname, currentSeasonKey)
         val tiers = eternalReturnRequestData.tiers()
         val matches = eternalReturnRequestData.matches(nickname, currentSeasonKey)
-
-        if (profile == null || tiers == null || matches == null) {
-            throw LoMuBotException("多次尝试仍然无法从dak.gg获取数据")
-        }
-
 
         if (matches.matches.isEmpty()) {
             throw LoMuBotException("该玩家当前赛季不存在任何数据 -> $nickname")

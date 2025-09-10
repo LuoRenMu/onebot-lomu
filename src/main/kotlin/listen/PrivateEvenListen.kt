@@ -5,11 +5,9 @@ import cn.luorenmu.listen.entity.BotRole
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
 import com.mikuac.shiro.annotation.PrivateMessageHandler
-import com.mikuac.shiro.annotation.PrivateMsgDeleteNoticeHandler
 import com.mikuac.shiro.annotation.common.Shiro
 import com.mikuac.shiro.core.Bot
 import com.mikuac.shiro.dto.event.message.PrivateMessageEvent
-import com.mikuac.shiro.dto.event.notice.PrivateMsgDeleteNoticeEvent
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -41,10 +39,5 @@ class PrivateEvenListen(
         if (private) {
             oneBotCommandAllocator.process(bot, messageSender)
         }
-    }
-
-    @PrivateMsgDeleteNoticeHandler
-    fun privateDeleteHandler(bot: Bot, privateMessage: PrivateMsgDeleteNoticeEvent) {
-
     }
 }

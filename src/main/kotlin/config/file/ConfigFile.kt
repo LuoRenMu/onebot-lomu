@@ -1,8 +1,8 @@
 package cn.luorenmu.config.file
 
 import cn.luorenmu.common.utils.PathUtils
-import cn.luorenmu.file.ReadWriteFile
-import com.alibaba.fastjson2.to
+import cn.luorenmu.common.utils.ReadWriteFile
+import kotlinx.serialization.json.Json
 import java.io.File
 
 /**
@@ -27,7 +27,7 @@ object ConfigFile {
             ReadWriteFile.entityWriteFile<T>(path, t)
             return t
         } else {
-            return ReadWriteFile.readFileJson(path).to<T>()
+            return Json.decodeFromString<T>(ReadWriteFile.readFileJson(path))
         }
     }
 }

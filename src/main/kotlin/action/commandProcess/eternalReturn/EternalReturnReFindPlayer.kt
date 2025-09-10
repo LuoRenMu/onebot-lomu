@@ -4,12 +4,14 @@ import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.render.EternalReturnFindPlayerRender
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.common.extensions.getFirstBot
+import cn.luorenmu.common.utils.StringLockUtils
 import cn.luorenmu.config.entity.AliasNameListEntity
 import cn.luorenmu.config.file.EternalReturnAliasName
 import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
 import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.BotContainer
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
 
 /**
@@ -25,21 +27,27 @@ class EternalReturnReFindPlayer(
 
     private val playerNames: AliasNameListEntity = EternalReturnAliasName.getPlayerNickName()
     override fun process(sender: MessageSender): String? {
+
         var nickname = sender.originalMessage(command())
         for (player in playerNames.aliasNames) {
             player.alias.firstOrNull { it == nickname }?.let {
                 nickname = player.nickname
             }
         }
-        if (!eternalReturnRequestData.syncPlayers(nickname)) {
-            return MsgUtils.builder().text("不存在的玩家 -> $nickname").build()
-        }
-        if (nickname.contains("@") || nickname.length < 2) {
-            return MsgUtils.builder().text("名称不合法 -> $nickname").build()
-        }
+        return runBlocking {
+            return@runBlocking StringLockUtils.lock("render_$nickname") {
+                if (!eternalReturnRequestData.syncPlayers(nickname)) {
+                    return@lock MsgUtils.builder().text("不存在的玩家 -> $nickname").build()
+                }
+                if (nickname.contains("@") || nickname.length < 2) {
+                    return@lock MsgUtils.builder().text("名称不合法 -> $nickname").build()
+                }
 
-        botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
-        return eternalReturnFindPlayerRender.imageRenderGenerate(nickname)
+                botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
+
+                return@lock eternalReturnFindPlayerRender.imageRenderGenerate(nickname)
+            }
+        }
     }
 
     override fun commandName(): String {

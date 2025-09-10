@@ -5,5 +5,6 @@ package cn.luorenmu.action.commandProcess.eternalReturn.entity
  * Date 2025.02.20 18:37
  */
 data class EternalReturnNewsCache(
+
     val messages: MutableList<Map<String, Any>>,
 )

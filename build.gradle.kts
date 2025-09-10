@@ -3,6 +3,7 @@ plugins {
     id("org.springframework.boot") version "3.3.3"
     id("io.spring.dependency-management") version "1.1.6"
     kotlin("plugin.spring") version "2.0.0"
+    kotlin("plugin.serialization") version "2.0.0"
 }
 
 
@@ -32,22 +33,23 @@ dependencies {
     implementation("com.madgag:animated-gif-lib:1.4")
     implementation("com.pngencoder:pngencoder:0.15.0")
 
-    // hutool工具包
-    implementation("cn.hutool:hutool-all:5.8.29")
-    // 个人开发工具包
+
+    implementation("io.ktor:ktor-client-core:3.2.3")
+    implementation("io.ktor:ktor-client-cio:3.2.3")
+
+
+    // petpet
     implementation(files("lib/petpet-core-1.0.0-beta2.jar"))
-    // 阿里巴巴高效json转换
-    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.52")
     // 日志
     implementation("io.github.oshai:kotlin-logging-jvm:6.0.3")
 
-    implementation("com.github.houbb:opencc4j:1.13.1")
 
     // kotlin官方库 反射
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     // kotlin官方库 扩展函数协程
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
+    // cache
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
     // spring
@@ -59,7 +61,7 @@ dependencies {
     implementation("com.mikuac:shiro:2.3.6")
 
     // 转拼音、简繁转换
-    implementation("com.github.houbb:opencc4j:1.8.1")
+    implementation("com.github.houbb:opencc4j:1.13.1")
     implementation("com.github.promeg:tinypinyin:2.0.3")
 
     // kotlin 协程

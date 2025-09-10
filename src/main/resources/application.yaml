@@ -27,7 +27,9 @@ spring:
   profiles:
     active: default
 web:
+  # 池大小
   pool: 2
+  # 是否显式页面信息 true为否
   headless: true
   # 加载更多的排位队友信息 (后果降低查询速度)
   render-team: 1

@@ -3,9 +3,10 @@ package cn.luorenmu.action.draw
 
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
-import cn.luorenmu.common.utils.CaffeineUtils
+import cn.luorenmu.common.utils.DrawImageUtils
 import cn.luorenmu.common.utils.PathUtils
-import cn.luorenmu.utils.DrawImageUtils
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.mikuac.shiro.common.utils.MsgUtils
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
@@ -22,15 +23,18 @@ import java.util.stream.Collectors
  */
 @Component
 class EternalReturnCutoffsDraw(
-    private val caffeineUtils: CaffeineUtils,
     private val eternalReturnRequestData: EternalReturnRequestData,
 ) {
+    private val cache: Cache<String, String> = Caffeine.newBuilder()
+        .maximumSize(2)
+        .expireAfterWrite(30, TimeUnit.MINUTES)
+        .build()
 
 
     suspend fun draw(): String {
         val tierDistributions = eternalReturnRequestData.tierDistributionsFind()
-        tierDistributions?.let { td ->
-            eternalReturnRequestData.leaderboardFind()?.let { leaderboard ->
+        tierDistributions.let { td ->
+            eternalReturnRequestData.leaderboardFind().let { leaderboard ->
                 // 段位
                 val tierTypes = td.distributions.stream().map { ds -> ds.tierType }.distinct().sorted { o1, o2 ->
                     val i1 = if (o1 < 10) o1 * 10 else o1
@@ -136,18 +140,12 @@ class EternalReturnCutoffsDraw(
                 return cqImg
             }
         }
-        return "无法正常与dak.gg建立连接"
     }
 
     fun cutoffs(): String {
-        return caffeineUtils.getCache(
-            "Eternal_Return:cutoffs",
-            String::class.java,
-            { runBlocking { draw() } },
-            30L,
-            TimeUnit.MINUTES,
-            EternalReturnCutoffsDraw::class.java
-        )!!
+        return cache.get(
+            "cutoffs"
+        ) { runBlocking { draw() } }
     }
 
 

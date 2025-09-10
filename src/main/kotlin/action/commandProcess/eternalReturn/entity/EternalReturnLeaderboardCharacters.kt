@@ -1,7 +1,8 @@
 package action.commandProcess.eternalReturn.entity
 
-import cn.luorenmu.action.commandProcess.eternalReturn.entiy.EternalReturnPlayerTierByUserNum
-import cn.luorenmu.action.commandProcess.eternalReturn.entiy.EternalReturnRankings
+import cn.luorenmu.action.commandProcess.eternalReturn.entity.EternalReturnPlayerTierByUserNum
+import cn.luorenmu.action.commandProcess.eternalReturn.entity.EternalReturnRankings
+import kotlinx.serialization.Serializable
 
 /**
  * @author LoMu
@@ -12,6 +13,7 @@ import cn.luorenmu.action.commandProcess.eternalReturn.entiy.EternalReturnRankin
  *  排行榜
  *  url -> https://dak.gg/er/leaderboard
  */
+@Serializable
 data class EternalReturnLeaderboardCharacters(
     val characterById: HashMap<Int, EternalReturnCharacterById>,
     val createdAt: Long,

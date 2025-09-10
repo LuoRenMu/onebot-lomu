@@ -3,17 +3,21 @@ package cn.luorenmu.action.commandProcess.eternalReturn
 import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.EternalReturnNewsCache
 import cn.luorenmu.action.request.EternalReturnRequestData
-import cn.luorenmu.action.request.api.HTTPRequest
 import cn.luorenmu.action.webPageScreenshot.EternalReturnOfficialWebsiteScreenshot
 import cn.luorenmu.common.extensions.getFirstBot
-import cn.luorenmu.common.utils.CaffeineUtils
-import cn.luorenmu.file.ReadWriteFile
+import cn.luorenmu.common.utils.HTTPRequestUtil
+import cn.luorenmu.common.utils.ReadWriteFile
 import cn.luorenmu.listen.entity.MessageSender
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.common.utils.ShiroUtils
 import com.mikuac.shiro.core.BotContainer
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.statement.*
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -29,10 +33,13 @@ import javax.imageio.ImageIO
 @Component("eternalReturnNews")
 class EternalReturnNews(
     private val eternalReturnOfficialWebsiteScreenshot: EternalReturnOfficialWebsiteScreenshot,
-    private val caffeineUtils: CaffeineUtils,
     private val eternalReturnRequestData: EternalReturnRequestData,
     private val botContainer: BotContainer,
 ) : CommandProcess {
+    private val cache: Cache<String, EternalReturnNewsCache> = Caffeine.newBuilder()
+        .maximumSize(6)
+        .expireAfterWrite(12, TimeUnit.HOURS)
+        .build()
 
     private val log = KotlinLogging.logger {}
     private val regex =
@@ -43,8 +50,8 @@ class EternalReturnNews(
         val regex = command()
         // 匹配到该命令必然存在
         val newsId = regex.find(sender.message)!!.groups[1]!!.value
-        val news = eternalReturnRequestData.news(newsId) ?: run { return null }
-        val messages = caffeineUtils.getCache("news:${newsId}", EternalReturnNewsCache::class.java, {
+        val news = eternalReturnRequestData.news(newsId)
+        val messages = cache.get("news:${newsId}") {
             val path = ReadWriteFile.CURRENT_PATH + "image/eternal_return/news/${newsId}"
             File(path).mkdirs()
             val screenshotPath = eternalReturnOfficialWebsiteScreenshot.screenshotNews(newsId, "${path}/$newsId.png")
@@ -68,7 +75,7 @@ class EternalReturnNews(
             val messagesConvertCQ =
                 forwardMessages.map { MsgUtils.builder().img(it).build() }.toMutableList()
             EternalReturnNewsCache(ShiroUtils.generateForwardMsg(sender.botId, "LoMu-Bot", messagesConvertCQ))
-        }, 30L, TimeUnit.DAYS)
+        }
         messages?.let {
             botContainer.getFirstBot().sendGroupForwardMsg(sender.groupOrSenderId, it.messages)
         }
@@ -81,7 +88,12 @@ class EternalReturnNews(
             val lastIndexOf = it.lastIndexOf(".")
             val type = it.substring(lastIndexOf)
             val imgPath = "${outputPath}/${UUID.randomUUID()}.$type"
-            HTTPRequest.downloadStream(it, imgPath)
+            runBlocking {
+                ReadWriteFile.writeStreamFile(
+                    imgPath,
+                    ByteArrayInputStream(HTTPRequestUtil.call(it).bodyAsBytes())
+                )
+            }
             localImages.add(imgPath)
         }
         return localImages
