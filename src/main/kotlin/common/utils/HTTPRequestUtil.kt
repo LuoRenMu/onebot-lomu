@@ -35,7 +35,9 @@ object HTTPRequestUtil {
             maxRetries = 3
             retryOnServerErrors(maxRetries = 3)
             retryIf { request, response ->
-                log.error { "http request ${request.method} -> ${request.url}  <- response ${response.status} " }
+                if (!response.status.isSuccess()) {
+                    log.error { "http request ${request.method} -> ${request.url}  <- response ${response.status} " }
+                }
                 !response.status.isSuccess() && response.status.value != 404
             }
             exponentialDelay()

@@ -4,7 +4,9 @@ import cn.luorenmu.MainApplication
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONWriter
 import java.io.*
+import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * @author LoMu
@@ -19,12 +21,19 @@ object ReadWriteFile {
      */
     private fun scanFilePath(): String {
         val location = MainApplication::class.java.protectionDomain.codeSource.location
-        val uri = location.toURI()
-        var file = File(uri)
-        if (file.isFile && file.name.lowercase().endsWith(".jar")) {
-            file = file.parentFile
+        var path = location.path
+        if (path.contains("jar")) {
+            val i = path.indexOf("jar")
+            path = path.substring(0, i)
         }
-        return file.absolutePath
+        var filePath = path.substring(path.indexOf("/"), path.lastIndexOf("/") + 1)
+
+        filePath = URLDecoder.decode(filePath, StandardCharsets.UTF_8)
+        return if (System.getProperty("os.name").lowercase(Locale.getDefault()).startsWith("win")) {
+            filePath.substring(1)
+        } else {
+            filePath
+        }
     }
 
 
