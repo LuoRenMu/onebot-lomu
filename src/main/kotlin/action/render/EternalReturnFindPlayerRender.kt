@@ -14,7 +14,6 @@ import cn.luorenmu.action.commandProcess.eternalReturn.entity.tier.EternalReturn
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.service.ImageService
-import com.mikuac.shiro.common.utils.MsgUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
@@ -37,6 +36,9 @@ class EternalReturnFindPlayerRender(
     private val log = KotlinLogging.logger { }
 
 
+    /**
+     * @return 文件路径
+     */
     fun imageRenderGenerate(nickname: String): String {
         val startTime = System.currentTimeMillis()
         val pageRender = runBlocking {
@@ -44,18 +46,16 @@ class EternalReturnFindPlayerRender(
         }
         log.info { "$nickname 网络数据请求耗时:${(System.currentTimeMillis() - startTime) / 1000}秒" }
         val imgPath = render.generateEternalReturnFindPlayerFTLHImage(pageRender)
-        val returnMsg = MsgUtils.builder().img(imgPath).build()
-        log.info { "$nickname 图片已生成准备发送" }
-        return returnMsg
+        log.info { "$nickname 图片已生成 -> $imgPath" }
+        return imgPath
 
     }
 
     suspend fun pageRender(nickname: String): EternalReturnRender {
         val currentSeason = eternalReturnRequestData.season().currentSeason
-
+        val tiers = eternalReturnRequestData.tiers()
         val currentSeasonKey = currentSeason.key
         val profile = eternalReturnRequestData.profile(nickname, currentSeasonKey)
-        val tiers = eternalReturnRequestData.tiers()
         val matches = eternalReturnRequestData.matches(nickname, currentSeasonKey)
 
         if (matches.matches.isEmpty()) {
@@ -348,16 +348,15 @@ class EternalReturnFindPlayerRender(
             // 最近一场的排位信息
             val matchIds =
                 matches.matches.filter { match -> match.matchingMode == 3 }.take(renderTeam).map { it.gameId }
+            val seasonId =
+                eternalReturnRequestData.season().seasons.first { sea -> sea.key == matches.meta.season }.id
+
             matches.matches.forEach { match ->
                 try {
                     // 获取队友信息
                     val teammate = matchIds.let {
                         if (matchIds.any { matchId -> matchId == match.gameId }) {
-                            val seasonID =
-                                eternalReturnRequestData.season()?.seasons?.first { sea -> sea.key == matches.meta.season }?.id
-                            eternalReturnRequestData.getMatchesById(
-                                match.gameId.toString(), match.nickname, seasonID ?: 0
-                            )
+                            eternalReturnRequestData.getMatchesById(match.gameId.toString(), match.nickname, seasonId)
                         } else null
                     }
 

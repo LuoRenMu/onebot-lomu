@@ -1,18 +1,45 @@
-import action.commandProcess.eternalReturn.entity.tier.EternalReturnTierDistributions
-import cn.luorenmu.common.utils.HTTPRequestUtil
-import cn.luorenmu.common.utils.ReadWriteFile
+import cn.luorenmu.MainApplication
+import cn.luorenmu.action.draw.EternalReturnCutoffsDraw
+import cn.luorenmu.action.render.EternalReturnFindPlayerRender
+import cn.luorenmu.exception.LoMuBotException
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.SpringBootConfiguration
+import org.springframework.boot.test.context.SpringBootTest
+import java.io.File
 
 /**
  *
  * @author LoMu
  * Date 2025/9/10 15:47
  */
-class RequestTest
+@SpringBootConfiguration
+@SpringBootTest(classes = [MainApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+class RequestTest(
+    @Autowired val eternalReturnFindPlayerRender: EternalReturnFindPlayerRender,
+    @Autowired val eternalReturnCutoffsDraw: EternalReturnCutoffsDraw,
+) {
+    private val log = KotlinLogging.logger {}
 
-suspend fun main() {
-    println(ReadWriteFile.CURRENT_PATH)
-    val req =
-        HTTPRequestUtil.RequestEntity("https://er.dakgg.io/api/v0/statistics/tier-distribution?teamMode=SQUAD&hl=zh_CN")
-    val resp = HTTPRequestUtil.callDTO<EternalReturnTierDistributions>(req)
-    println(resp)
+    @Test
+    fun testPlayer() {
+        runBlocking {
+            val path = eternalReturnFindPlayerRender.imageRenderGenerate("神圣审判")
+            log.info { "testPlayer -> $path" }
+            if (!File(path).exists()) {
+                throw LoMuBotException("imageRenderGenerate错误")
+            }
+        }
+    }
+
+    @Test
+    fun testCutoffs() {
+        val path = eternalReturnCutoffsDraw.cutoffs()
+        log.info { "testCutoffs -> $path" }
+        if (!File(path).exists()) {
+            throw LoMuBotException("cutoffs错误")
+        }
+    }
 }

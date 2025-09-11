@@ -52,7 +52,8 @@ class EternalReturnFindPlayer(
                         MsgUtils.builder().reply(sender.messageId).text("与服务器无法正常连接 正在重试")
                             .build()
                     )
-                return@runBlocking eternalReturnFindPlayerRender.imageRenderGenerate(nickname)
+                return@runBlocking MsgUtils.builder().img(eternalReturnFindPlayerRender.imageRenderGenerate(nickname))
+                    .build()
             }
         }
     }

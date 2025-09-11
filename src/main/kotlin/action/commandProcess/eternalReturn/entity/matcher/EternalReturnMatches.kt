@@ -1,5 +1,6 @@
 package cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher
 
+import com.alibaba.fastjson2.annotation.JSONField
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,7 +20,8 @@ data class EternalReturnMatches(
         // https://cdn.dak.gg/assets/er/game-assets/1.44.0/ItemIcon_115504.png
         @SerialName("equipment")
         @Contextual
-        val equipmentVirtual: List<Int> = listOf(),
+        @JSONField(name = "equipment")
+        val equipmentVirtual: Any,
         // 装备背景
         // https://cdn.dak.gg/er/images/item/ico-itemgradebg-04.svg
         val equipmentGrade: List<Int> = listOf(),

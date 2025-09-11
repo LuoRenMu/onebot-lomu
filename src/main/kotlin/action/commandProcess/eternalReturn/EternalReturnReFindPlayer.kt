@@ -40,6 +40,10 @@ class EternalReturnReFindPlayer(
                 nickname = player.nickname
             }
         }
+        if (nickname.contains("@") || nickname.length < 2) {
+            return MsgUtils.builder().text("名称不合法 -> $nickname").build()
+        }
+
         return runBlocking {
             StringLockUtils.lock("render_$nickname") {
                 cache.get(nickname) {
@@ -47,12 +51,10 @@ class EternalReturnReFindPlayer(
                         if (!eternalReturnRequestData.syncPlayers(nickname = nickname)) {
                             return@runBlocking MsgUtils.builder().text("不存在的玩家 -> $nickname").build()
                         }
-                        if (nickname.contains("@") || nickname.length < 2) {
-                            return@runBlocking MsgUtils.builder().text("名称不合法 -> $nickname").build()
-                        }
-                        botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
-                        return@runBlocking eternalReturnFindPlayerRender.imageRenderGenerate(nickname)
                     }
+                    botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
+                    return@get MsgUtils.builder()
+                        .img(eternalReturnFindPlayerRender.imageRenderGenerate(nickname)).build()
                 }
             }
         }

@@ -7,7 +7,6 @@ import cn.luorenmu.common.utils.DrawImageUtils
 import cn.luorenmu.common.utils.PathUtils
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.mikuac.shiro.common.utils.MsgUtils
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
 import java.awt.Color
@@ -31,7 +30,10 @@ class EternalReturnCutoffsDraw(
         .build()
 
 
-    suspend fun draw(): String {
+    /**
+     * @return 路径
+     */
+    private suspend fun draw(): String {
         val tierDistributions = eternalReturnRequestData.tierDistributionsFind()
         tierDistributions.let { td ->
             eternalReturnRequestData.leaderboardFind().let { leaderboard ->
@@ -134,10 +136,9 @@ class EternalReturnCutoffsDraw(
                     )
                     num++
                 }
-                val url = PathUtils.getEternalReturnImagePath("cutoffs.png")
-                draw.saveImage(url)
-                val cqImg = MsgUtils.builder().img(url).build()
-                return cqImg
+                val path = PathUtils.getEternalReturnImagePath("cutoffs.png")
+                draw.saveImage(path)
+                return path
             }
         }
     }

@@ -1,5 +1,8 @@
 package cn.luorenmu.common.utils
 
+import cn.luorenmu.exception.LoMuBotException
+import com.alibaba.fastjson2.to
+import com.alibaba.fastjson2.toJSONString
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -12,8 +15,6 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.util.concurrent.TimeUnit
 
 /**
@@ -28,15 +29,13 @@ object HTTPRequestUtil {
         .expireAfterWrite(4, TimeUnit.HOURS)
         .build()
 
-    val json = Json {
-        ignoreUnknownKeys = true
-    }
 
     val client = HttpClient(CIO) {
         install(HttpRequestRetry) {
             maxRetries = 3
             retryOnServerErrors(maxRetries = 3)
             retryIf { request, response ->
+                log.error { "http request ${request.method} -> ${request.url}  <- response ${response.status} " }
                 !response.status.isSuccess() && response.status.value != 404
             }
             exponentialDelay()
@@ -58,25 +57,30 @@ object HTTPRequestUtil {
 
     // 返回对象
     suspend inline fun <reified T> callDTO(url: String): T =
-        json.decodeFromString<T>(call(RequestEntity(url)).bodyAsText())
+        call(RequestEntity(url)).bodyAsText().to<T>()
 
     suspend inline fun <reified T> callDTO(requestEntity: RequestEntity): T =
-        json.decodeFromString<T>(call(requestEntity).bodyAsText())
+        call(requestEntity).bodyAsText().to<T>()
 
     suspend fun call(requestEntity: RequestEntity): HttpResponse {
         log.info { "http request ${requestEntity.method} -> ${requestEntity.url} " }
-        return client.request {
-            url(requestEntity.url)
-            method = requestEntity.method
-            requestEntity.body?.let { by ->
-                setBody(by)
-                header(HttpHeaders.ContentType, "application/json")
-            }
-            requestEntity.headers?.let { reqHeaders ->
-                reqHeaders.forEach { h ->
-                    header(h.name, h.content)
+        try {
+            return client.request {
+                url(requestEntity.url)
+                method = requestEntity.method
+                requestEntity.body?.let { by ->
+                    setBody(by)
+                    header(HttpHeaders.ContentType, "application/json")
+                }
+                requestEntity.headers?.let { reqHeaders ->
+                    reqHeaders.forEach { h ->
+                        header(h.name, h.content)
+                    }
                 }
             }
+        } catch (e: Exception) {
+            log.error(e) { "Error during request ${e.printStackTrace()}" }
+            throw LoMuBotException("请求期间出错,无法连接到目标或被目标主机拒绝连接")
         }
 
     }
@@ -84,22 +88,20 @@ object HTTPRequestUtil {
     inline fun <reified T> requestCacheJson(key: String, requestEntity: RequestEntity): T {
         var t: T? = null
         val tJson = jsonCache.get(key) {
-            t = runBlocking { json.decodeFromString<T>(call(requestEntity).bodyAsText()) }
-            json.encodeToString(t)
+            t = runBlocking { call(requestEntity).bodyAsText().to<T>() }
+            t.toJSONString()
         }
-        return t ?: json.decodeFromString<T>(tJson)
+        return t ?: tJson.to<T>()
     }
 
     @Serializable
-    class RequestEntity(val url: String, @Contextual val method: HttpMethod = HttpMethod.Get) {
-        var params: MutableList<RequestParam>? = null
+    data class RequestEntity(val url: String, @Contextual val method: HttpMethod = HttpMethod.Get) {
         var body: MutableList<RequestParam>? = null
-        var bodyJson: String? = null
         var headers: MutableList<RequestParam>? = null
 
         @Serializable
-        class RequestParam(val name: String, val content: String) {
-            constructor(p: Pair<String, String>) : this(p.first, p.second)
+        data class RequestParam(val name: String, val content: String) {
+            infix fun String.to(that: String): RequestParam = RequestParam(this, that)
         }
     }
 

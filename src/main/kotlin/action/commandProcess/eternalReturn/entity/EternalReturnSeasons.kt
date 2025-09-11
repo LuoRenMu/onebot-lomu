@@ -1,5 +1,6 @@
 package action.commandProcess.eternalReturn.entity
 
+import com.alibaba.fastjson2.annotation.JSONField
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -27,5 +28,6 @@ data class EternalReturnSeasons(
     val key: String,
     val name: String,
     @SerialName("isCurrent")
+    @JSONField(name = "isCurrent")
     val current: Boolean = false,
 )

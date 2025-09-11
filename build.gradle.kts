@@ -3,7 +3,6 @@ plugins {
     id("org.springframework.boot") version "3.3.3"
     id("io.spring.dependency-management") version "1.1.6"
     kotlin("plugin.spring") version "2.0.0"
-    kotlin("plugin.serialization") version "2.0.0"
 }
 
 
@@ -16,7 +15,6 @@ repositories {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-    isEnabled = false
 }
 
 
@@ -36,6 +34,8 @@ dependencies {
 
     implementation("io.ktor:ktor-client-core:3.2.3")
     implementation("io.ktor:ktor-client-cio:3.2.3")
+
+    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.58")
 
 
     // petpet

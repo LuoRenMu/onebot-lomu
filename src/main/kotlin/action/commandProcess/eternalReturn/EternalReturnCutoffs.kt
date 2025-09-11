@@ -3,6 +3,7 @@ package cn.luorenmu.action.commandProcess.eternalReturn
 import cn.luorenmu.action.commandProcess.CommandProcess
 import cn.luorenmu.action.draw.EternalReturnCutoffsDraw
 import cn.luorenmu.listen.entity.MessageSender
+import com.mikuac.shiro.common.utils.MsgUtils
 import org.springframework.stereotype.Component
 
 /**
@@ -14,7 +15,7 @@ class EternalReturnCutoffs(
     private val eternalReturnDraw: EternalReturnCutoffsDraw,
 ) : CommandProcess {
     override fun process(sender: MessageSender): String? {
-        return eternalReturnDraw.cutoffs()
+        return MsgUtils.builder().img(eternalReturnDraw.cutoffs()).build()
     }
 
     override fun commandName(): String {
