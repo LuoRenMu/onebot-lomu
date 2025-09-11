@@ -38,7 +38,7 @@ class EternalReturnNews(
 ) : CommandProcess {
     private val cache: Cache<String, EternalReturnNewsCache> = Caffeine.newBuilder()
         .maximumSize(6)
-        .expireAfterWrite(12, TimeUnit.HOURS)
+        .expireAfterWrite(2, TimeUnit.DAYS)
         .build()
 
     private val log = KotlinLogging.logger {}

@@ -10,8 +10,12 @@ import cn.luorenmu.config.entity.AliasNameListEntity
 import cn.luorenmu.config.file.EternalReturnAliasName
 import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.mikuac.shiro.core.BotContainer
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 /**
  * @author LoMu
@@ -23,6 +27,10 @@ class EternalReturnFindCharacter(
     private val eternalReturnWebPageScreenshot: EternalReturnWebPageScreenshot,
     private val botContainer: BotContainer,
 ) : CommandProcess {
+
+    private val cache: Cache<String, String> = Caffeine.newBuilder().maximumSize(50)
+        .expireAfterWrite(6, TimeUnit.HOURS)
+        .build()
     private val characterNames: AliasNameListEntity = EternalReturnAliasName.getCharacterNickName()
     override fun process(sender: MessageSender): String? {
         var characterName = sender.originalMessage(command())
@@ -36,7 +44,11 @@ class EternalReturnFindCharacter(
             // 对包含数字的名称进行特殊处理(暂时)
             if (originName.lowercase() == "c0" || originName.lowercase() == "u4dn" || originName.lowercase() == "11") eternalReturnFindCharacter(
                 originName, -1, sender.messageId.toString()
-            ) else eternalReturnFindCharacter(characterName, indexMatch, sender.messageId.toString())
+            ) else runBlocking {
+                cache.get("${characterName}_${indexMatch}") {
+                    eternalReturnFindCharacter(characterName, indexMatch, sender.messageId.toString())
+                }
+            }
         }
 
     }
@@ -44,7 +56,7 @@ class EternalReturnFindCharacter(
 
     private fun eternalReturnFindCharacter(characterName: String, i: Int, messageId: String): String? {
         val characterList = eternalReturnRequestData.characterFind()
-        characterList?.let { characters ->
+        characterList.let { characters ->
             val findName = findName(characterName)
             val character = characters.characters.firstOrNull { character ->
                 character.key.lowercase() == characterName.lowercase() || character.name.toPinYin()

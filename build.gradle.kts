@@ -61,7 +61,6 @@ dependencies {
     implementation("com.mikuac:shiro:2.3.6")
 
     // 转拼音、简繁转换
-    implementation("com.github.houbb:opencc4j:1.13.1")
     implementation("com.github.promeg:tinypinyin:2.0.3")
 
     // kotlin 协程

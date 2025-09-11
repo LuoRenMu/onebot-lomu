@@ -9,10 +9,13 @@ import cn.luorenmu.config.entity.AliasNameListEntity
 import cn.luorenmu.config.file.EternalReturnAliasName
 import cn.luorenmu.config.shiro.customAction.setMsgEmojiLike
 import cn.luorenmu.listen.entity.MessageSender
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.BotContainer
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 /**
  * @author LoMu
@@ -25,9 +28,12 @@ class EternalReturnReFindPlayer(
     private val eternalReturnRequestData: EternalReturnRequestData,
 ) : CommandProcess {
 
+    private val cache: Cache<String, String> = Caffeine.newBuilder().maximumSize(50)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build()
     private val playerNames: AliasNameListEntity = EternalReturnAliasName.getPlayerNickName()
-    override fun process(sender: MessageSender): String? {
 
+    override fun process(sender: MessageSender): String? {
         var nickname = sender.originalMessage(command())
         for (player in playerNames.aliasNames) {
             player.alias.firstOrNull { it == nickname }?.let {
@@ -35,20 +41,23 @@ class EternalReturnReFindPlayer(
             }
         }
         return runBlocking {
-            return@runBlocking StringLockUtils.lock("render_$nickname") {
-                if (!eternalReturnRequestData.syncPlayers(nickname)) {
-                    return@lock MsgUtils.builder().text("不存在的玩家 -> $nickname").build()
+            StringLockUtils.lock("render_$nickname") {
+                cache.get(nickname) {
+                    runBlocking {
+                        if (!eternalReturnRequestData.syncPlayers(nickname = nickname)) {
+                            return@runBlocking MsgUtils.builder().text("不存在的玩家 -> $nickname").build()
+                        }
+                        if (nickname.contains("@") || nickname.length < 2) {
+                            return@runBlocking MsgUtils.builder().text("名称不合法 -> $nickname").build()
+                        }
+                        botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
+                        return@runBlocking eternalReturnFindPlayerRender.imageRenderGenerate(nickname)
+                    }
                 }
-                if (nickname.contains("@") || nickname.length < 2) {
-                    return@lock MsgUtils.builder().text("名称不合法 -> $nickname").build()
-                }
-
-                botContainer.getFirstBot().setMsgEmojiLike(sender.messageId.toString(), "124")
-
-                return@lock eternalReturnFindPlayerRender.imageRenderGenerate(nickname)
             }
         }
     }
+
 
     override fun commandName(): String {
         return "永恒轮回查询玩家"

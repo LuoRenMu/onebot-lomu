@@ -6,7 +6,6 @@ import cn.luorenmu.common.extensions.sendMsg
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
-import com.github.houbb.opencc4j.util.ZhConverterUtil
 import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.Bot
 import com.mikuac.shiro.core.BotContainer
@@ -48,8 +47,7 @@ class OneBotCommandAllocator(
                 originMessage.replace("\\[CQ:reply,id=\\d+]".toRegex(), "")
         }
 
-        val userMessage = ZhConverterUtil.toSimple(originMessage)
-        return userMessage.contains(oneBotCommand.command())
+        return originMessage.contains(oneBotCommand.command())
     }
 
     private fun send(message: String?, id: Long, messageId: Int, type: MessageType) {

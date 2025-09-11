@@ -329,7 +329,7 @@ class EternalReturnFindPlayerRender(
     private fun matchRating(matches: EternalReturnMatches): String? {
         val maxServer = matches.matches.groupBy { it.serverName }.maxBy { it.value.size }.value.first().serverName
         // 模式
-        val mode = matches.matches.groupBy { it.serverName }.maxBy { it.value.size }.value.first().matchingMode
+        val mode = matches.matches.groupBy { it.matchingMode }.maxBy { it.value.size }.value.first().matchingMode
         val filter = matches.matches.filter { it.matchingMode == mode }
         val count = filter.count()
         val avg = filter.map { it.damageToPlayer }.average().toInt()
