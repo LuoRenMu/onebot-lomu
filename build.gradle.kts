@@ -58,13 +58,14 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-aop")
     // onebot协议库
-    implementation("com.mikuac:shiro:2.3.6")
+    implementation("com.mikuac:shiro:2.4.8")
 
     // 转拼音、简繁转换
     implementation("com.github.promeg:tinypinyin:2.0.3")
 
     // kotlin 协程
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 
     // spirng 测试

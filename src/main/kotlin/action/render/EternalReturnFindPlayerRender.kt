@@ -15,8 +15,7 @@ import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.service.ImageService
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.ZonedDateTime
@@ -52,21 +51,30 @@ class EternalReturnFindPlayerRender(
     }
 
     suspend fun pageRender(nickname: String): EternalReturnRender {
-        val currentSeason = eternalReturnRequestData.season().currentSeason
-        val tiers = eternalReturnRequestData.tiers()
-        val currentSeasonKey = currentSeason.key
-        val profile = eternalReturnRequestData.profile(nickname, currentSeasonKey)
-        val matches = eternalReturnRequestData.matches(nickname, currentSeasonKey)
+        return coroutineScope {
+            val currentSeason = eternalReturnRequestData.season().currentSeason
+            val tiers = eternalReturnRequestData.tiers()
+            val currentSeasonKey = currentSeason.key
 
-        if (matches.matches.isEmpty()) {
-            throw LoMuBotException("该玩家当前赛季不存在任何数据 -> $nickname")
+            val profileDeferred = async(Dispatchers.IO) {
+                eternalReturnRequestData.profile(nickname, currentSeasonKey)
+            }
+            val matchesDeferred = async(Dispatchers.IO) {
+                eternalReturnRequestData.matches(nickname, currentSeasonKey)
+            }
+
+            val profile = profileDeferred.await()
+            val matches = matchesDeferred.await()
+
+            if (matches.matches.isEmpty()) {
+                throw LoMuBotException("该玩家当前赛季不存在任何数据 -> $nickname")
+            }
+            //必要数据由left优先生成并渲染
+            val eternalReturnRender = pageLeftConvert(profile, tiers, currentSeason)
+            pageRightConvert(matches, eternalReturnRender)
+            eternalReturnRender.rating = matchRating(matches)
+            eternalReturnRender
         }
-        //必要数据由left优先生成并渲染
-        val eternalReturnRender = pageLeftConvert(profile, tiers, currentSeason)
-        pageRightConvert(matches, eternalReturnRender)
-        eternalReturnRender.rating = matchRating(matches)
-        return eternalReturnRender
-
     }
 
 
@@ -97,7 +105,7 @@ class EternalReturnFindPlayerRender(
                         val tierGrad = if (data.tierId > 6 && data.tierId * 10 > 60) "" else data.tierGradeId
                         rpName = "${currentTier.name}$tierGrad - ${data.tierMmr}RP"
                     }
-                    tierImageUrl = getTierImgUrl(currentTier.id)
+                    tierImageUrl = imageService.getTierImgUrl(currentTier.id)
 
                 }
 
@@ -128,7 +136,7 @@ class EternalReturnFindPlayerRender(
                     profileImageUrl = firstSeasonOverview?.characterStats?.maxByOrNull(
                         EternalReturnProfileStat::play
                     )?.let { stats ->
-                        getCharacterImgUrl(
+                        imageService.getCharacterImgUrl(
                             EternalReturnCharacterById.CharacterImgUrlType.ResultImageUrl,
                             stats.key.toInt(),
                             stats.skinStats?.maxByOrNull(EternalReturnProfileStat::play)?.key ?: -1L
@@ -140,7 +148,7 @@ class EternalReturnFindPlayerRender(
                         ?.let { seasonOverview ->
                             seasonOverview.duoStats.take(8).forEach { duoStat ->
                                 recentPlays.add(EternalReturnPlayerRecentPlay().apply {
-                                    imageWrapperUrl = getCharacterImgUrl(
+                                    imageWrapperUrl = imageService.getCharacterImgUrl(
                                         EternalReturnCharacterById.CharacterImgUrlType.CharProfileImageUrl,
                                         duoStat.characterStats.first().key.toInt(),
                                     )
@@ -161,7 +169,7 @@ class EternalReturnFindPlayerRender(
                             characterUseStats.add(
                                 EternalReturnRender.EternalReturnCharacterUseStats(
                                     characterName = character.name,
-                                    imgUrl = getCharacterImgUrl(
+                                    imgUrl = imageService.getCharacterImgUrl(
                                         EternalReturnCharacterById.CharacterImgUrlType.CharProfileImageUrl,
                                         characterState.key.toInt()
                                     ),
@@ -242,17 +250,17 @@ class EternalReturnFindPlayerRender(
             dateHour = "${date.hour}:${date.minute}:${date.second}"
             dateMonth = "${date.monthValue}月${date.dayOfMonth}日"
 
-            skillUrl = getTacticalSkillImgUrl(match.tacticalSkillGroup)
-            traitSkillUrl = getTraitSkillImgUrl(match.traitFirstCore)
-            traitSkillGroupUrl = getTraitSkillImgUrl(match.traitSecondSub.first(), true)
+            skillUrl = imageService.getTacticalSkillImgUrl(match.tacticalSkillGroup)
+            traitSkillUrl = imageService.getTraitSkillImgUrl(match.traitFirstCore)
+            traitSkillGroupUrl = imageService.getTraitSkillImgUrl(match.traitSecondSub.first(), true)
             equips = equipmentConvert(match.equipment.map { it.toLong() }.toList(), match.equipmentGrade)
-            characterAvatarUrl = getCharacterImgUrl(
+            characterAvatarUrl = imageService.getCharacterImgUrl(
                 EternalReturnCharacterById.CharacterImgUrlType.CharProfileImageUrl,
                 match.characterNum.toInt(),
                 match.skinCode
             )
             characterName = eternalReturnRequestData.getCharacterInfo(match.characterNum.toString()).name
-            weaponUrl = getWeaponImgUrl(match.bestWeapon)
+            weaponUrl = imageService.getWeaponImgUrl(match.bestWeapon)
 
 
             // 队友
@@ -266,13 +274,16 @@ class EternalReturnFindPlayerRender(
     /**
      * 装备转换
      */
-    private fun equipmentConvert(equipment: List<Long>, equipmentGrade: List<Int>): MutableList<EternalReturnEquip> {
+    private suspend fun equipmentConvert(
+        equipment: List<Long>,
+        equipmentGrade: List<Int>,
+    ): MutableList<EternalReturnEquip> {
         val equips: MutableList<EternalReturnEquip> = mutableListOf()
         for (i in 0 until 5) {
             equips.add(
                 i, EternalReturnEquip(
-                    itemUrl = if (i < equipment.size) getItemImgUrl(equipment[i]) else "",
-                    itemBgUrl = if (i < equipmentGrade.size) getItemImgBgUrl(equipmentGrade[i]) else ""
+                    itemUrl = if (i < equipment.size) imageService.getItemImgUrl(equipment[i]) else "",
+                    itemBgUrl = if (i < equipmentGrade.size) imageService.getItemImgBgUrl(equipmentGrade[i]) else ""
                 )
             )
         }
@@ -282,7 +293,7 @@ class EternalReturnFindPlayerRender(
     /**
      * 队友数据转换
      */
-    private fun teamMateDataConvert(
+    private suspend fun teamMateDataConvert(
         teammate: EternalReturnMatchesById,
         nickname: String,
     ): MutableList<EternalReturnRender.EternalReturnPlayerMatchData.EternalReturnTeammate> {
@@ -298,7 +309,7 @@ class EternalReturnFindPlayerRender(
                 teammateInfos.add(
                     EternalReturnRender.EternalReturnPlayerMatchData.EternalReturnTeammate().apply {
                         nickName = teamMate.nickname
-                        avatarUrl = getCharacterImgUrl(
+                        avatarUrl = imageService.getCharacterImgUrl(
                             EternalReturnCharacterById.CharacterImgUrlType.CharProfileImageUrl,
                             teamMate.characterNum.toInt(),
                             teamMate.skinCode
@@ -308,12 +319,12 @@ class EternalReturnFindPlayerRender(
                         assist = teamMate.playerAssistant
                         tk = teamMate.teamKill
                         rpImageUrl =
-                            getTierImgUrl(teammate.playerTiers.first { iter -> iter.userNum.toLong() == teamMate.userNum }.tierId)
+                            imageService.getTierImgUrl(teammate.playerTiers.first { iter -> iter.userNum.toLong() == teamMate.userNum }.tierId)
                         rp = teamMate.mmrAfter.toString()
-                        skillUrl = getTacticalSkillImgUrl(teamMate.tacticalSkillGroup)
-                        traitSkillUrl = getTraitSkillImgUrl(teamMate.traitFirstCore)
-                        traitSkillGroupUrl = getTraitSkillImgUrl(teamMate.traitSecondSub.first(), true)
-                        weaponUrl = getWeaponImgUrl(teamMate.bestWeapon)
+                        skillUrl = imageService.getTacticalSkillImgUrl(teamMate.tacticalSkillGroup)
+                        traitSkillUrl = imageService.getTraitSkillImgUrl(teamMate.traitFirstCore)
+                        traitSkillGroupUrl = imageService.getTraitSkillImgUrl(teamMate.traitSecondSub.first(), true)
+                        weaponUrl = imageService.getWeaponImgUrl(teamMate.bestWeapon)
                         equips =
                             equipmentConvert(teamMate.equipment.map { it.toLong() }.toList(), teamMate.equipmentGrade)
                     })
@@ -345,66 +356,45 @@ class EternalReturnFindPlayerRender(
     ) {
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
         coroutineScope {
-            // 最近一场的排位信息
+
+            val nickname = matches.matches.first().nickname
+
+            // 需要渲染队友的对局ID
             val matchIds =
                 matches.matches.filter { match -> match.matchingMode == 3 }.take(renderTeam).map { it.gameId }
+
             val seasonId =
                 eternalReturnRequestData.season().seasons.first { sea -> sea.key == matches.meta.season }.id
+
+            val awaitMatchesByIds: MutableList<Deferred<EternalReturnMatchesById>> = mutableListOf()
+            matchIds.forEach { matchId ->
+                val async = async(Dispatchers.IO) {
+                    eternalReturnRequestData.getMatchesById(
+                        matchId.toString(),
+                        nickname,
+                        seasonId
+                    )
+                }
+                awaitMatchesByIds.add(async)
+            }
+
+            val map = awaitMatchesByIds.awaitAll().associateBy { byId -> byId.matches.first().gameId }
 
             matches.matches.forEach { match ->
                 try {
                     // 获取队友信息
-                    val teammate = matchIds.let {
+                    matchIds.let {
                         if (matchIds.any { matchId -> matchId == match.gameId }) {
-                            eternalReturnRequestData.getMatchesById(match.gameId.toString(), match.nickname, seasonId)
+                            eternalReturnRender.matches.add(matcherConvert(match, dateFormatter, map[match.gameId]))
                         } else null
                     }
 
-                    eternalReturnRender.matches.add(matcherConvert(match, dateFormatter, teammate))
+
                 } catch (e: Exception) {
                     log.error { e.printStackTrace() }
                 }
             }
         }
-    }
-
-
-    private fun getCharacterImgUrl(type: EternalReturnCharacterById.CharacterImgUrlType, id: Int, skin: Long = -1) =
-        run {
-            imageService.getEternalReturnCharacterImage(type, id, skin)
-            "/images/eternal_return/character/$type/$id/$skin"
-        }
-
-    private fun getItemImgUrl(id: Long) = run {
-        imageService.getEternalReturnItemImage(id)
-        "/images/eternal_return/item/${id}"
-    }
-
-    private fun getTierImgUrl(id: Int) = run {
-        imageService.getTierImage(id)
-        "/images/eternal_return/tier/${id}"
-    }
-
-    private fun getItemImgBgUrl(id: Int) = run {
-        imageService.getEternalReturnItemBgImage(id)
-        "/images/eternal_return/item_bg/${id}"
-    }
-
-    private fun getTraitSkillImgUrl(id: Long, `is`: Boolean = false) = run {
-
-        imageService.getEternalReturnTraitSkillImage(id)
-        "/images/eternal_return/trait_skill/${id}?is=${`is`}"
-
-    }
-
-    private fun getTacticalSkillImgUrl(id: Long) = run {
-        imageService.getEternalReturnTacticalSkillImage(id)
-        "/images/eternal_return/tactical_skill/${id}"
-    }
-
-    private fun getWeaponImgUrl(id: Int) = run {
-        imageService.getEternalReturnWeaponImage(id)
-        "/images/eternal_return/weapon/${id}"
     }
 
 

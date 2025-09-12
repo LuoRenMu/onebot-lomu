@@ -6,6 +6,7 @@ import cn.luorenmu.common.extensions.sendMsg
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
+import com.microsoft.playwright.TimeoutError
 import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.Bot
 import com.mikuac.shiro.core.BotContainer
@@ -81,8 +82,16 @@ class OneBotCommandAllocator(
                         messageSender.messageId,
                         messageSender.messageType
                     )
+                } catch (e: TimeoutError) {
+                    log.error { "${oneBotCommand.commandName()}:页面长时间加载仍未完成,为保证后续任务仍然执行 该任务已被中断 ${e.stackTraceToString()}" }
+                    send(
+                        "执行时间过长,已被中断",
+                        messageSender.groupOrSenderId,
+                        messageSender.messageId,
+                        messageSender.messageType
+                    )
                 } catch (e: Exception) {
-                    log.error { e.stackTraceToString() }
+                    log.error { "${oneBotCommand.commandName()}:${e.stackTraceToString()}" }
                     send(
                         "服务器内部错误",
                         messageSender.groupOrSenderId,

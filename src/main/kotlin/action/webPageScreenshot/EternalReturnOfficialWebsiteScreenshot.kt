@@ -1,7 +1,7 @@
 package cn.luorenmu.action.webPageScreenshot
 
 import cn.luorenmu.action.request.api.EternalReturnOfficialAPI
-import cn.luorenmu.common.utils.WebPool
+import cn.luorenmu.service.WebPool
 import org.springframework.stereotype.Component
 
 /**

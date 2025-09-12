@@ -11,7 +11,7 @@ import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
 import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.BotContainer
-import com.mikuac.shiro.dto.action.response.GetMsgResp
+import com.mikuac.shiro.dto.action.response.MsgResp
 import org.springframework.stereotype.Component
 
 /**
@@ -65,7 +65,7 @@ class PetPetCommand(
         // 回复消息
         messageSender.message.getCQReplyMessageId()?.let {
             val msg = botContainer.getFirstBot().getMsg(it.toInt()).data
-            return triggerObj(getMsgToMessageSender(msg, messageSender), index, existsFrom = true)
+            return triggerObj(getMsgToMessageSender(msg, it.toInt(), messageSender), index, existsFrom = true)
         }
 
         // 自己发送的图片
@@ -87,14 +87,14 @@ class PetPetCommand(
     }
 
 
-    private fun getMsgToMessageSender(msg: GetMsgResp, messageSender: MessageSender) = MessageSender(
+    private fun getMsgToMessageSender(msg: MsgResp, msgId: Int, messageSender: MessageSender) = MessageSender(
         groupOrSenderId = messageSender.groupOrSenderId,
         senderName = msg.sender.nickname,
         senderId = msg.sender.userId.toLong(),
-        role = BotRole.convert(msg.sender.role),
+        role = BotRole.Member,
         message = msg.message,
         messageType = MessageType.convert(msg.messageType),
-        messageId = msg.messageId,
+        messageId = msgId,
         botId = messageSender.botId
     )
 

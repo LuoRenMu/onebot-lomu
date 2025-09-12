@@ -3,7 +3,7 @@ package cn.luorenmu.action.render
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.dto.EternalReturnRender
 import cn.luorenmu.common.utils.FreeMarkerUtils
 import cn.luorenmu.common.utils.PathUtils
-import cn.luorenmu.common.utils.WebPool
+import cn.luorenmu.service.WebPool
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap

@@ -4,7 +4,7 @@ import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
 import cn.luorenmu.common.extensions.toPinYin
 import cn.luorenmu.common.utils.HTTPRequestUtil
 import cn.luorenmu.common.utils.PathUtils
-import cn.luorenmu.common.utils.WebPool
+import cn.luorenmu.service.WebPool
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.microsoft.playwright.Page

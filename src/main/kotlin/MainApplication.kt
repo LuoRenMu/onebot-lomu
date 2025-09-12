@@ -18,6 +18,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableConfigurationProperties
 class MainApplication
 
+
 fun main(args: Array<String>) {
     runApplication<MainApplication>(*args)
 }

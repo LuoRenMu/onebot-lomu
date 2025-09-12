@@ -3,6 +3,7 @@ package cn.luorenmu.controller
 import action.commandProcess.eternalReturn.entity.EternalReturnCharacterById
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.service.ImageService
+import kotlinx.coroutines.runBlocking
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -34,13 +35,13 @@ class ImageController(
         @PathVariable id: Int,
         @PathVariable skin: Long,
     ): ResponseEntity<InputStreamResource> {
-        val path = imageService.getEternalReturnCharacterImage(type, id, skin)
+        val path = runBlocking { imageService.getEternalReturnCharacterImage(type, id, skin) }
         return ResponseEntity.ok(InputStreamResource(FileInputStream(path)))
     }
 
     @GetMapping("/images/eternal_return/tier/{id}")
     fun getEternalReturnTierImage(@PathVariable id: Int): ResponseEntity<InputStreamResource> {
-        val path = imageService.getTierImage(id)
+        val path = runBlocking { imageService.getTierImage(id) }
         return ResponseEntity.ok(InputStreamResource(FileInputStream(path)))
     }
 
@@ -48,7 +49,7 @@ class ImageController(
     fun getEternalReturnItemImage(
         @PathVariable id: Long,
     ): ResponseEntity<InputStreamResource> {
-        val path = imageService.getEternalReturnItemImage(id)
+        val path = runBlocking { imageService.getEternalReturnItemImage(id) }
         return ResponseEntity.ok(InputStreamResource(FileInputStream(path)))
     }
 
@@ -56,7 +57,7 @@ class ImageController(
     fun getEternalReturnTacticalSkillImage(
         @PathVariable id: Long,
     ): ResponseEntity<InputStreamResource> {
-        val path = imageService.getEternalReturnTacticalSkillImage(id)
+        val path = runBlocking { imageService.getEternalReturnTacticalSkillImage(id) }
         return ResponseEntity.ok(InputStreamResource(FileInputStream(path)))
     }
 
@@ -64,7 +65,7 @@ class ImageController(
     fun getEternalReturnWeaponImage(
         @PathVariable id: Int,
     ): ResponseEntity<InputStreamResource> {
-        val path = imageService.getEternalReturnWeaponImage(id)
+        val path = runBlocking { imageService.getEternalReturnWeaponImage(id) }
         return ResponseEntity.ok(InputStreamResource(FileInputStream(path)))
     }
 
@@ -73,7 +74,7 @@ class ImageController(
     fun getEternalReturnItemBgImage(
         @PathVariable id: Int,
     ): ResponseEntity<String> {
-        val path = imageService.getEternalReturnItemBgImage(id)
+        val path = runBlocking { imageService.getEternalReturnItemBgImage(id) }
         return ResponseEntity.ok(FileReader(path).readText())
     }
 
@@ -85,7 +86,8 @@ class ImageController(
         @PathVariable id: Long,
         @RequestParam `is`: Boolean,
     ): ResponseEntity<InputStreamResource> {
-        val path = imageService.getEternalReturnTraitSkillImage(id)
+
+        val path = runBlocking { imageService.getEternalReturnTraitSkillImage(id) }
         if (`is`) {
             path.skillGroup?.let {
                 return ResponseEntity.ok(InputStreamResource(FileInputStream(path.skillGroup)))

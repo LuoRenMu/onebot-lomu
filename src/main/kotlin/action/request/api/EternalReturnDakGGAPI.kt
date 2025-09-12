@@ -5,6 +5,7 @@ import cn.luorenmu.common.utils.HTTPRequestUtil
 import cn.luorenmu.common.utils.HTTPRequestUtil.RequestEntity
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.common.utils.ReadWriteFile
+import cn.luorenmu.common.utils.StringLockUtils
 import io.ktor.client.statement.*
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -118,13 +119,15 @@ object EternalReturnDakGGAPI {
          * @return image path
          */
         suspend fun dakGGDownloadTierIcon(id: Int): String {
-            val eternalReturnDataImagePath = PathUtils.getEternalReturnDataImagePath("tier/${id}.png")
-            if (!File(eternalReturnDataImagePath).exists()) {
-                dakGGDownloadURIStreamFile(
-                    "/er/images/tier/round/$id.png", eternalReturnDataImagePath
-                )
+            return StringLockUtils.lock("Tier:$id") {
+                val eternalReturnDataImagePath = PathUtils.getEternalReturnDataImagePath("tier/${id}.png")
+                if (!File(eternalReturnDataImagePath).exists()) {
+                    dakGGDownloadURIStreamFile(
+                        "/er/images/tier/round/$id.png", eternalReturnDataImagePath
+                    )
+                }
+                return@lock eternalReturnDataImagePath
             }
-            return eternalReturnDataImagePath
         }
 
         /**
@@ -134,14 +137,16 @@ object EternalReturnDakGGAPI {
          * @return 磁盘存储路径
          */
         suspend fun getItemGradeBg(id: Int): String {
-            val eternalReturnDataImagePath = PathUtils.getEternalReturnDataImagePath("ico/itemgradebg-0${id}.svg")
-            if (!File(eternalReturnDataImagePath).exists()) {
-                // 写死 没关系 ^ ^
-                dakGGDownloadURIStreamFile(
-                    "/er/images/item/ico-itemgradebg-0${id}.svg", eternalReturnDataImagePath
-                )
+            return StringLockUtils.lock("GradeBg:$id") {
+                val eternalReturnDataImagePath = PathUtils.getEternalReturnDataImagePath("ico/itemgradebg-0${id}.svg")
+                if (!File(eternalReturnDataImagePath).exists()) {
+                    // 写死 没关系 ^ ^
+                    dakGGDownloadURIStreamFile(
+                        "/er/images/item/ico-itemgradebg-0${id}.svg", eternalReturnDataImagePath
+                    )
+                }
+                return@lock eternalReturnDataImagePath
             }
-            return eternalReturnDataImagePath
         }
 
 
