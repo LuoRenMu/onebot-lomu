@@ -12,11 +12,11 @@ import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalRet
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.matcher.EternalReturnMatchesById
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.tier.EternalReturnTiers
 import cn.luorenmu.action.request.EternalReturnRequestData
+import cn.luorenmu.config.external.LoMuProperties
 import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.service.ImageService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -30,7 +30,7 @@ class EternalReturnFindPlayerRender(
     private val eternalReturnRequestData: EternalReturnRequestData,
     private val imageService: ImageService,
     private val render: FTLHRender,
-    @Value("\${web.render-team}") private val renderTeam: Int,
+    private val loMuProperties: LoMuProperties,
 ) {
     private val log = KotlinLogging.logger { }
 
@@ -56,12 +56,14 @@ class EternalReturnFindPlayerRender(
             val tiers = eternalReturnRequestData.tiers()
             val currentSeasonKey = currentSeason.key
 
+
             val profileDeferred = async(Dispatchers.IO) {
                 eternalReturnRequestData.profile(nickname, currentSeasonKey)
             }
             val matchesDeferred = async(Dispatchers.IO) {
                 eternalReturnRequestData.matches(nickname, currentSeasonKey)
             }
+
 
             val profile = profileDeferred.await()
             val matches = matchesDeferred.await()
@@ -361,7 +363,8 @@ class EternalReturnFindPlayerRender(
 
             // 需要渲染队友的对局ID
             val matchIds =
-                matches.matches.filter { match -> match.matchingMode == 3 }.take(renderTeam).map { it.gameId }
+                matches.matches.filter { match -> match.matchingMode == 3 }.take(loMuProperties.eter.teammate)
+                    .map { it.gameId }
 
             val seasonId =
                 eternalReturnRequestData.season().seasons.first { sea -> sea.key == matches.meta.season }.id

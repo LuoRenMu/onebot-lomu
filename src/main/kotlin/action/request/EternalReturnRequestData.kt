@@ -19,7 +19,9 @@ import cn.luorenmu.action.request.entity.EternalReturnTraitSkillImgDTO
 import cn.luorenmu.common.utils.HTTPRequestUtil
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.exception.LoMuBotException
+import com.alibaba.fastjson2.to
 import io.ktor.client.call.*
+import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
 import java.io.File
@@ -120,7 +122,16 @@ class EternalReturnRequestData {
      * 玩家信息 不缓存
      */
     suspend fun profile(name: String, season: String = ""): EternalReturnProfile {
-        return HTTPRequestUtil.callDTO<EternalReturnProfile>(EternalReturnDakGGAPI.Player.profileV1API(name, season))
+        val resp = HTTPRequestUtil.call(
+            EternalReturnDakGGAPI.Player.profileV1API(
+                name,
+                season
+            )
+        )
+        if (resp.status.value == 404) {
+            throw LoMuBotException("不存在的玩家 -> $name")
+        }
+        return resp.bodyAsText().to<EternalReturnProfile>()
     }
 
     /**

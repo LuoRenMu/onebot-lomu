@@ -5,5 +5,4 @@ package cn.luorenmu.exception
  * Date 2025.05.30 15:18
  * Description: 该异常消息将作为回复抛给用户
  */
-class LoMuBotException(val msg: String) : RuntimeException() {
-}
+class LoMuBotException(val msg: String) : RuntimeException()

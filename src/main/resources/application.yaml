@@ -26,13 +26,13 @@ spring:
     check-template-location: false
   profiles:
     active: default
-web:
-  # 池大小
-  pool: 2
-  # 是否显式页面信息 true为否
-  headless: true
-  # 加载更多的排位队友信息 (后果降低查询速度)
-  render-team: 1
-bot:
-  # 私聊支持
-  private: false
+lomu:
+  web:
+    # 是否显式页面信息 true为否
+    headless: true
+    # 池大小
+    size: 2
+  bot:
+    private: false
+  eter:
+    teammate: 1

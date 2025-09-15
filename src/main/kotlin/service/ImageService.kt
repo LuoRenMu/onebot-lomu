@@ -4,10 +4,8 @@ import action.commandProcess.eternalReturn.entity.EternalReturnCharacterById
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
 import cn.luorenmu.common.utils.StringLockUtils
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.coroutineScope
 import org.springframework.stereotype.Service
-import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * @author LoMu
@@ -17,9 +15,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 class ImageService(
     private val eternalReturnRequestData: EternalReturnRequestData,
 ) {
-    companion object {
-        val awaitPool = CopyOnWriteArrayList<Deferred<Any>>()
-    }
 
     suspend fun getTierImage(id: Int) =
         EternalReturnDakGGAPI.Download.dakGGDownloadTierIcon(id)

@@ -40,7 +40,13 @@ object EternalReturnDakGGAPI {
         fun profileV1API(nickname: String, season: String) =
             RequestEntity("https://er.dakgg.io/api/v1/players/${nickname}/profile?season=${season}")
 
-        fun matchesV1API(nickname: String, season: String, matchingMode: String, teamMode: String, page: Int = 1) =
+        fun matchesV1API(
+            nickname: String,
+            season: String,
+            matchingMode: String = "ALL",
+            teamMode: String = "ALL",
+            page: Int = 1,
+        ) =
             RequestEntity(
                 "https://er.dakgg.io/api/v1/players/${nickname}/matches?season=${season}&matchingMode=${matchingMode}&teamMode=${teamMode}&page=${page}&hl=zh_CN"
             )

@@ -1,7 +1,9 @@
 package cn.luorenmu.action.webPageScreenshot
 
 import cn.luorenmu.action.request.api.EternalReturnOfficialAPI
+import cn.luorenmu.exception.LoMuBotException
 import cn.luorenmu.service.WebPool
+import com.microsoft.playwright.TimeoutError
 import org.springframework.stereotype.Component
 
 /**
@@ -28,11 +30,11 @@ class EternalReturnOfficialWebsiteScreenshot(
             ) {
                 it.evaluate("document.querySelector('#gnb').remove()")
             }
-        } catch (_: Exception) {
+        } catch (_: TimeoutError) {
             if (failed < 5) {
                 return screenshotNews(id, outputPath, failed + 1)
             }
-            throw RuntimeException("EternalReturnOfficialWebsiteScreenshot 重试次数过多")
+            throw LoMuBotException("EternalReturnOfficialWebsiteScreenshot 重试次数过多")
         }
         return outputPath
     }

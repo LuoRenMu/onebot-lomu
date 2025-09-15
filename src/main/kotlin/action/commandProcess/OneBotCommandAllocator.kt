@@ -83,9 +83,9 @@ class OneBotCommandAllocator(
                         messageSender.messageType
                     )
                 } catch (e: TimeoutError) {
-                    log.error { "${oneBotCommand.commandName()}:页面长时间加载仍未完成,为保证后续任务仍然执行 该任务已被中断 ${e.stackTraceToString()}" }
+                    log.error { "${oneBotCommand.commandName()}:页面长时间加载仍未完成,为保证后续任务仍然执行 该任务已被强行中断 ${e.stackTraceToString()}" }
                     send(
-                        "执行时间过长,已被中断",
+                        "执行时间过长,已被强行中断",
                         messageSender.groupOrSenderId,
                         messageSender.messageId,
                         messageSender.messageType

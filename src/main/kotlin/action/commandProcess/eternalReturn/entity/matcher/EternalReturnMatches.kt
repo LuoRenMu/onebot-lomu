@@ -158,6 +158,7 @@ data class EternalReturnMatches(
         val serverNameStr: String = serverNameCovert(serverName)
     }
 
+
     companion object {
         fun matchModeTypeCovert(matchingMode: Int) =
             when (matchingMode) {

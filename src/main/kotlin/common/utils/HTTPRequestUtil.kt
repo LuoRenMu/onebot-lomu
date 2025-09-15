@@ -8,14 +8,20 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.network.sockets.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.cache.*
+import io.ktor.client.plugins.cache.storage.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import java.nio.file.Files
 import java.util.concurrent.TimeUnit
+import kotlin.io.path.Path
 
 /**
  * @author LoMu
@@ -32,18 +38,31 @@ object HTTPRequestUtil {
 
     val client = HttpClient(CIO) {
         install(HttpRequestRetry) {
-            maxRetries = 3
+            maxRetries = 5
             retryOnServerErrors(maxRetries = 3)
-            retryIf { request, response ->
-                if (!response.status.isSuccess()) {
-                    log.error { "http request ${request.method} -> ${request.url}  <- response ${response.status} " }
+
+            retryOnExceptionIf { request, cause ->
+                when (cause) {
+                    is SocketTimeoutException,
+                    is ConnectTimeoutException,
+                    is ClientRequestException,
+                        -> true
+
+                    else -> false
                 }
-                !response.status.isSuccess() && response.status.value != 404
             }
             exponentialDelay()
             delayMillis { retry ->
                 retry * 1000L
             }
+
+        }
+        install(HttpCache) {
+            val cacheFile = Files.createDirectories(Path(ReadWriteFile.currentPathFileName("/cache"))).toFile()
+            publicStorage(FileStorage(cacheFile))
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 10000
         }
 
         defaultRequest {
@@ -82,7 +101,7 @@ object HTTPRequestUtil {
             }
         } catch (e: Exception) {
             log.error(e) { "Error during request ${e.printStackTrace()}" }
-            throw LoMuBotException("请求期间出错,无法连接到目标或被目标主机拒绝连接")
+            throw LoMuBotException("请求期间出错, 无法连接到目标或被目标主机拒绝连接")
         }
 
     }
