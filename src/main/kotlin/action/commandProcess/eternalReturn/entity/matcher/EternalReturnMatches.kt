@@ -24,7 +24,8 @@ data class EternalReturnMatches(
         val equipmentVirtual: Any,
         // 装备背景
         // https://cdn.dak.gg/er/images/item/ico-itemgradebg-04.svg
-        val equipmentGrade: List<Int> = listOf(),
+        @JSONField(name = "equipmentGrade")
+        val equipmentGradeVirtual: Any,
         val userNum: Long = 0,
         val nickname: String = "",
         val gameId: Long = 0,
@@ -142,7 +143,12 @@ data class EternalReturnMatches(
         private inline fun <reified T> convertToList(value: Any?): List<T> {
             return when (value) {
                 is List<*> -> value.mapNotNull { it as? T }
-                is Map<*, *> -> value.values.mapNotNull { it as? T }
+                is Map<*, *> -> {
+                    val list = mutableListOf<T>()
+                    value.forEach { (key, v) -> list.add(key.toString().toInt(), v as T) }
+                    list
+                }
+
                 else -> emptyList()
             }
         }
@@ -151,6 +157,11 @@ data class EternalReturnMatches(
             get() {
                 return convertToList(equipmentVirtual)
             }
+        val equipmentGrade: List<Int>
+            get() {
+                return convertToList(equipmentGradeVirtual)
+            }
+
 
         // 3为排位模式，2为匹配模式 6为钴协议 8 为联盟 9 为孤狼 0为全部
         val matchTypeStr: String =
