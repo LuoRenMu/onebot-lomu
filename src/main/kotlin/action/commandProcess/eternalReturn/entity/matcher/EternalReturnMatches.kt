@@ -145,7 +145,15 @@ data class EternalReturnMatches(
                 is List<*> -> value.mapNotNull { it as? T }
                 is Map<*, *> -> {
                     val list = mutableListOf<T>()
-                    value.forEach { (key, v) -> list.add(key.toString().toInt(), v as T) }
+                    var lastKey = 0
+                    value.forEach { (key, v) ->
+                        if (lastKey == key) {
+                            list.add(key.toString().toInt(), v as T)
+                        } else {
+                            list.add(v as T)
+                        }
+                        lastKey++
+                    }
                     list
                 }
 

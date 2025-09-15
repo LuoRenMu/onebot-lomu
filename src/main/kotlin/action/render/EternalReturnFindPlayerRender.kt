@@ -387,9 +387,7 @@ class EternalReturnFindPlayerRender(
                 try {
                     // 获取队友信息
                     matchIds.let {
-                        if (matchIds.any { matchId -> matchId == match.gameId }) {
-                            eternalReturnRender.matches.add(matcherConvert(match, dateFormatter, map[match.gameId]))
-                        } else null
+                        eternalReturnRender.matches.add(matcherConvert(match, dateFormatter, map[match.gameId]))
                     }
 
 

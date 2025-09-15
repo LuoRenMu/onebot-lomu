@@ -46,6 +46,7 @@ object HTTPRequestUtil {
                     is SocketTimeoutException,
                     is ConnectTimeoutException,
                     is ClientRequestException,
+                    is HttpRequestTimeoutException,
                         -> true
 
                     else -> false

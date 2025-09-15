@@ -357,10 +357,14 @@
                         <ul class="item_box">
                             <#list match.equips as equip>
                                 <li class="item">
-                                    <img class="item_bg" src="${equip.itemBgUrl}"
-                                         alt="">
-                                    <img class="item_img"
-                                         src="${equip.itemUrl}" alt="">
+                                    <#if equip.itemBgUrl != "" >
+                                        <img class="item_bg" src="${equip.itemBgUrl}"
+                                             alt="">
+                                    </#if>
+                                    <#if equip.itemUrl != "" >
+                                        <img class="item_img"
+                                             src="${equip.itemUrl}" alt="">
+                                    </#if>
                                 </li>
                             </#list>
                         </ul>

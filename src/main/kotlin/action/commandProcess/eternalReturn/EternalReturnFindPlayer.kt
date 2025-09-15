@@ -1,7 +1,6 @@
 package cn.luorenmu.action.commandProcess.eternalReturn
 
 import cn.luorenmu.action.commandProcess.CommandProcess
-import cn.luorenmu.action.render.EternalReturnFindPlayerRender
 import cn.luorenmu.action.request.EternalReturnRequestData
 import cn.luorenmu.action.webPageScreenshot.EternalReturnWebPageScreenshot
 import cn.luorenmu.common.extensions.getFirstBot
@@ -22,7 +21,6 @@ class EternalReturnFindPlayer(
     private val eternalReturnRequestData: EternalReturnRequestData,
     private val eternalReturnWebPageScreenshot: EternalReturnWebPageScreenshot,
     private val botContainer: BotContainer,
-    private val eternalReturnFindPlayerRender: EternalReturnFindPlayerRender,
 ) : CommandProcess {
 
     override fun process(sender: MessageSender): String? {
@@ -52,9 +50,8 @@ class EternalReturnFindPlayer(
                         MsgUtils.builder().reply(sender.messageId).text("与服务器无法正常连接 正在重试")
                             .build()
                     )
-                return@runBlocking MsgUtils.builder().img(eternalReturnFindPlayerRender.imageRenderGenerate(nickname))
-                    .build()
             }
+            return@runBlocking null
         }
     }
 
