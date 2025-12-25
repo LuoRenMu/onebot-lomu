@@ -1,5 +1,6 @@
 # 说明
 
+**该库不在维护** 已重构至该库[EternalReturnBot](https://github.com/LuoRenMu/EternalReturnLoMu)    
 永恒轮回战绩查询机器人 ~~螺母-Bot~~
 
 ## 部署使用
