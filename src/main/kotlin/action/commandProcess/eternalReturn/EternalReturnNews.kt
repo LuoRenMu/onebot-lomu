@@ -50,7 +50,6 @@ class EternalReturnNews(
         val regex = command()
         // 匹配到该命令必然存在
         val newsId = regex.find(sender.message)!!.groups[1]!!.value
-        val news = eternalReturnRequestData.news(newsId)
         val messages = cache.get("news:${newsId}") {
             val path = ReadWriteFile.CURRENT_PATH + "image/eternal_return/news/${newsId}"
             File(path).mkdirs()
@@ -66,15 +65,21 @@ class EternalReturnNews(
                 forwardMessages.add(screenshotPath)
             }
 
-            // 图片内容
-            val articleImages = getArticleImages(news)
-            if (articleImages.isNotEmpty()) {
-                val localImages = downloadImg(path, articleImages)
-                forwardMessages.addAll(localImages)
+
+            try {
+                val news = eternalReturnRequestData.news(newsId)
+                // 图片内容
+                val articleImages = getArticleImages(news)
+                if (articleImages.isNotEmpty()) {
+                    val localImages = downloadImg(path, articleImages)
+                    forwardMessages.addAll(localImages)
+                }
+            } catch (e: Exception) {
+                log.error { "官网公告 图片内容获取失败 ${e.printStackTrace()} " }
             }
             val messagesConvertCQ =
                 forwardMessages.map { MsgUtils.builder().img(it).build() }.toMutableList()
-            EternalReturnNewsCache(ShiroUtils.generateForwardMsg(sender.botId, "LoMu-Bot", messagesConvertCQ))
+            EternalReturnNewsCache(ShiroUtils.generateForwardMsg(2842775752, "LoMu-Bot", messagesConvertCQ))
         }
         messages?.let {
             botContainer.getFirstBot().sendGroupForwardMsg(sender.groupOrSenderId, it.messages)

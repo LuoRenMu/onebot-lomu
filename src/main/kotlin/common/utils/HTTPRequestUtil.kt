@@ -40,7 +40,6 @@ object HTTPRequestUtil {
         install(HttpRequestRetry) {
             maxRetries = 5
             retryOnServerErrors(maxRetries = 3)
-
             retryOnExceptionIf { request, cause ->
                 when (cause) {
                     is SocketTimeoutException,
@@ -84,7 +83,7 @@ object HTTPRequestUtil {
     suspend inline fun <reified T> callDTO(requestEntity: RequestEntity): T =
         call(requestEntity).bodyAsText().to<T>()
 
-    suspend fun call(requestEntity: RequestEntity): HttpResponse {
+    suspend fun call(requestEntity: RequestEntity, timeoutMillis: Long = 0): HttpResponse {
         log.info { "http request ${requestEntity.method} -> ${requestEntity.url} " }
         try {
             return client.request {
@@ -97,6 +96,11 @@ object HTTPRequestUtil {
                 requestEntity.headers?.let { reqHeaders ->
                     reqHeaders.forEach { h ->
                         header(h.name, h.content)
+                    }
+                }
+                if (timeoutMillis != 0L) {
+                    timeout {
+                        requestTimeoutMillis = timeoutMillis
                     }
                 }
             }
@@ -123,8 +127,13 @@ object HTTPRequestUtil {
 
         @Serializable
         data class RequestParam(val name: String, val content: String) {
-            infix fun String.to(that: String): RequestParam = RequestParam(this, that)
+            companion object {
+                infix fun String.cc(that: String): RequestParam = RequestParam(this, that)
+            }
         }
+
+        suspend inline fun <reified T> callDTO(): T =
+            callDTO<T>(this)
     }
 
 }

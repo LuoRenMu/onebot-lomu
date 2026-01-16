@@ -15,11 +15,14 @@ import cn.luorenmu.action.commandProcess.eternalReturn.entity.tier.EternalReturn
 import cn.luorenmu.action.commandProcess.eternalReturn.entity.weapon.EternalReturnWeapons
 import cn.luorenmu.action.request.api.EternalReturnDakGGAPI
 import cn.luorenmu.action.request.api.EternalReturnOfficialAPI
+import cn.luorenmu.action.request.entity.EternalReturnRequestError
 import cn.luorenmu.action.request.entity.EternalReturnTraitSkillImgDTO
 import cn.luorenmu.common.utils.HTTPRequestUtil
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.exception.LoMuBotException
+import com.alibaba.fastjson2.JSONException
 import com.alibaba.fastjson2.to
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
@@ -33,6 +36,7 @@ import java.io.File
 @Component
 class EternalReturnRequestData {
 
+    private val log = KotlinLogging.logger {}
 
     // sync player
     suspend fun syncPlayers(nickname: String, counter: Int = 0): Boolean {
@@ -131,14 +135,23 @@ class EternalReturnRequestData {
         if (resp.status.value == 404) {
             throw LoMuBotException("不存在的玩家 -> $name")
         }
-        return resp.bodyAsText().to<EternalReturnProfile>()
+        try {
+            return resp.bodyAsText().to<EternalReturnProfile>()
+        } catch (e: JSONException) {
+            val errorDTO = resp.bodyAsText().to<EternalReturnRequestError>()
+            if (errorDTO.error.status == 404) {
+                throw LoMuBotException("不存在的玩家 -> $name")
+            }
+            log.error { "profile request error: ${errorDTO.error} name -> $name" }
+            throw LoMuBotException("无法正确处理要查询的玩家 -> $name")
+        }
     }
 
     /**
      * 永恒轮回官网新聞
      */
     fun news(id: String): String {
-        return runBlocking { HTTPRequestUtil.callDTO<String>(EternalReturnOfficialAPI.news(id)) }
+        return runBlocking { HTTPRequestUtil.call(EternalReturnOfficialAPI.news(id)).bodyAsText() }
 
     }
 

@@ -36,7 +36,6 @@ data class EternalReturnCharacterById(
     enum class CharacterImgUrlType(val type: String) {
         ResultImageUrl("ResultImage"),
         CommunityImageUrl("CommunityImage"),
-        ImageUrl("Image"),
         CharProfileImageUrl("CharProfileImage")
     }
 }
