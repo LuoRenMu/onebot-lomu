@@ -244,6 +244,10 @@
             </#if>
             <#list matches as match>
                 <div class="war_record">
+                    <div class="game_id">Game ID
+                        ${match.serverName}-${match.gameId}
+                        (${match.version})
+                    </div>
                     <#if match.rank == 99>
                         <div class="war_record_left_escape"></div>
                         <div class="war_record_right_escape"></div>
@@ -368,10 +372,6 @@
                                 </li>
                             </#list>
                         </ul>
-                        <div class="game_id">Game ID
-                            ${match.serverName}-${match.gameId}
-                            (${match.version})
-                        </div>
                     </div>
                     <#if match.teamMates??>
                         <#list match.teamMates as teamMate>

@@ -23,13 +23,15 @@ body {
 
 #banner_user_info {
     height: 177px;
-    width: 100%;
     border-radius: 10px 10px 0 0;
-    background-size: 100% 177px;
+    width: 100%;
+    background-size: contain;
     background-position: center;
-    background-image: url("/images/bg-landing-search.jpg");
+    background-image: url("https://cdn.dak.gg/er/images/bg/bg-landing-search-v9.jpg");
     box-sizing: content-box;
     border: 1px solid #363944;
+    display: flex;
+    overflow: hidden;
 }
 
 #describe {
@@ -45,18 +47,17 @@ body {
 #header > .profile-image-wrapper img {
     width: 222px;
     height: 177px;
-    float: left;
 }
 
 
 #top {
     width: 355px;
     height: 100px;
-    float: left;
+    font-weight: bold;
     margin-left: 20px;
     margin-top: 50px;
     text-align: left;
-    color: aliceblue;
+    color: rgb(255, 255, 255);
 }
 
 .nickname {
@@ -64,15 +65,6 @@ body {
     font-size: 28px;
 }
 
-#verison {
-    margin-right: 10px;
-    margin-top: 10px;
-    float: right;
-    font-size: 10px;
-    height: 20px;
-    border: 1px #808080 solid;
-    border-radius: 8px;
-}
 
 #logo {
     color: #d1cfcf;
@@ -84,27 +76,26 @@ body {
 #top > p {
     margin-top: 20px;
     font-size: 12px;
-    color: #d6d6d6;
+    color: #ffffff;
 }
 
 .level {
     width: 70px;
     text-align: center;
     border-radius: 30px;
-    border: 2px solid #fff;
+    border: 2px solid #ffffff;
 }
 
 #body {
     width: 100%;
     margin-top: 20px;
-    float: left;
+    display: flex;
 }
 
 #left {
-    float: left;
     border-radius: 10px;
     margin-top: 20px;
-    width: 352px;
+    width: 350px;
 }
 
 
@@ -112,9 +103,6 @@ body {
     padding: 20px;
     margin-left: 20px;
     width: 775px;
-    height: 100%;
-    float: left;
-
 }
 
 #rank {
@@ -196,14 +184,28 @@ body {
 
 .war_record {
     border: 1px solid rgb(230, 230, 230);
-    margin-bottom: 10px;
-    height: 100%;
+    margin-top: 22px;
     width: 810px;
     border-radius: 20px;
     position: relative;
     background-color: rgba(255, 255, 255, 0.8);
 }
 
+.game_id {
+    font-size: 14px;
+    position: absolute;
+    color: #1b1a1a93;
+    font-weight: bold;
+    top: -11px;
+    left: 50%;
+    height: 20px;
+    padding: 0 10px;
+    text-align: center;
+    line-height: 20px;
+    z-index: 0;
+
+    transform: translate(-50%, -50%);
+}
 
 .war_record_left_top1,
 .war_record_left_top2,
@@ -255,19 +257,15 @@ body {
 }
 
 .war_rank {
-    margin-top: 5px;
     width: 60px;
     height: 66px;
-    padding-left: 25px;
-    padding-top: 10px;
+    margin-left: 30px;
     font-size: 14px;
-    float: left;
 }
 
 .war_rank > div {
-    margin: 5px;
+    margin: 5px 0;
     height: 14px;
-    width: 66px;
 }
 
 .war_rank > div:nth-child(1) {
@@ -293,11 +291,8 @@ body {
 
 
 .war_record_character_info {
-    margin-top: 4px;
-    float: left;
-    width: 54px;
-    height: 74px;
     text-align: center;
+
 }
 
 .war_record_character_info .character_name {
@@ -314,6 +309,7 @@ body {
 }
 
 .hero_avatar > img {
+    object-fit: cover;
     border-radius: 50%;
 }
 
@@ -321,68 +317,56 @@ body {
     height: 98px;
     width: 100% -10;
     overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 
 .war_record2 {
     overflow: hidden;
     height: 50px;
-    width: 100% -10;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     border-top: 1px solid rgb(230, 230, 230);
 }
 
 
 .war_record2 .hero_avatar,
 .war_record2 .hero_avatar > img {
-    float: left;
     width: 32.65px;
     height: 32.65px;
-    margin-top: 2.55px;
 }
 
 
 .war_record2 .play_data {
-    margin-top: 7px;
-    margin-left: 8px;
+    min-width: 380px;
     height: 35.2px;
 }
 
 
 .war_record2 .skill {
-    margin-top: 5px;
-    margin-left: 5px;
-    width: 48px;
-    height: 48px;
-
+    width: 38px;
+    height: 38px;
 }
-
 
 .weapon {
     border-radius: 20px;
     background-color: #323232;
 }
 
-.war_record2 .play_stat {
-    margin-top: 7px;
-    margin-left: 100px;
-}
-
-.war_record2 .play_data {
-    margin-left: 50px;
-    width: 100px;
-}
 
 .teammate_rp_img {
-    margin-left: 25px;
-    margin-top: 3px;
-    float: left;
     width: 14px;
     height: 14px;
+    display: inline-block;
+    vertical-align: middle;
 }
 
+
 .teammate_rp span {
-    margin-left: 5px;
-    margin-top: 2px;
-    float: left;
+
     font-size: 12px;
     color: #808080;
 }
@@ -413,8 +397,6 @@ body {
 }
 
 .war_record2 .item_box {
-    margin-left: 75px;
-    margin-top: 10px;
     width: 102.4px;
     height: 41.6px;
 }
@@ -426,11 +408,13 @@ body {
 
 
 .skill {
-    margin-top: 20px;
-    margin-left: 20px;
+    margin-left: 15px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    align-content: space-around;
     width: 54px;
     height: 54px;
-    float: left;
 }
 
 img {
@@ -438,53 +422,13 @@ img {
     height: 100%;
 }
 
-.play_stat {
-    margin-left: 20px;
-    width: 90px;
-    float: left;
-    height: 54px;
-    margin-top: 25px;
-}
-
-.stat {
-
-    font-size: 14px;
-    font-weight: bold;
-}
-
-
-.stat span {
-    font-weight: normal;
-}
-
-.label {
-    margin-top: 8px;
-    width: 70px;
-    height: 12px;
-    font-size: 12px;
-    color: #808080;
-}
-
 .play_data {
-    border: #323232;
-    margin-top: 25px;
-    margin-left: 10px;
-    width: 300px;
-    height: 44px;
-    float: left;
-}
-
-
-.damage {
-    width: 62px;
-    height: 44px;
-    display: inline-block;
-}
-
-.rp {
-    width: 100px;
-    height: 44px;
-    display: inline-block;
+    height: 100%;
+    min-width: 350px;
+    margin-left: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .rp svg {
@@ -492,11 +436,6 @@ img {
     height: 5px;
 }
 
-.route {
-    display: inline-block;
-    width: 100px;
-    height: 44px;
-}
 
 .play_data_title {
     font: 14px;
@@ -506,6 +445,7 @@ img {
 .play_data_label {
     margin-top: 3px;
     font-size: 12px;
+    text-align: center;
     color: #808080;
 }
 
@@ -516,10 +456,13 @@ img {
 }
 
 .item_box {
-    margin-left: 20px;
-    margin-top: 20px;
     width: 128px;
-    float: left;
+    margin-left: auto;
+    margin-right: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
     height: 52px;
 }
 
@@ -527,7 +470,6 @@ img {
     position: relative;
     background-color: #E6E6E6;
     border-radius: 4px;
-    float: left;
     width: 40.5px;
     height: 25.5px;
     list-style: none;
@@ -547,23 +489,22 @@ img {
 }
 
 .item_bg {
-    position: absolute;
-    mix-blend-mode: multiply;
+    position: relative;
     z-index: 1;
 }
 
 
 .item_img {
-    height: 70%;
-    left: 5px;
-    top: 4px;
-    width: 70%;
     position: absolute;
     z-index: 2;
+    left: 50%;
+    top: 50%;
+    height: 80%;
+    width: 80%;
+    transform: translate(-50%, -50%);
 }
 
 .teammate_name {
-    float: left;
     width: 130px;
     margin-left: 20px;
     margin-top: 7px;
@@ -581,20 +522,34 @@ img {
     color: #323232;
 }
 
-.game_id {
-    float: left;
-    font-size: 14px;
-    color: #808080;
-}
 
 #recent_play,
 #rank_character_stats {
     margin-top: 30px;
-    border-collapse: collapse;
+    border-spacing: 0;
+    overflow: hidden;
     background-color: rgb(255, 255, 255);
+    border-radius: 10px;
+    border: solid 1px rgb(201, 201, 201);
     width: 100%;
     font-size: 12px;
+    border-collapse: separate;
     font-weight: normal;
+}
+
+#rank_character_stats thead .character {
+    padding-left: 20px;
+}
+
+#recent_play tbody tr:last-child td,
+#rank_character_stats tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#recent_play tbody td,
+#rank_character_stats tbody td {
+    padding: 5px 10px;
+    border-bottom: 1px solid rgb(201, 201, 201);
 }
 
 
@@ -604,13 +559,10 @@ img {
     background: rgb(54, 57, 68);
 }
 
+
 #recent_play > thead > tr > th,
 #rank_character_stats > thead > tr > th {
     height: 40px;
-}
-
-tbody tr {
-    border: 1px solid rgb(201, 201, 201)
 }
 
 
@@ -619,15 +571,13 @@ tbody tr {
 }
 
 .character {
-    text-indent: 10px;
+    padding-left: 10px;
     text-align: left;
 }
 
 .info {
-    overflow: hidden;
-    margin-top: 5px;
+    display: inline-block;
     margin-left: 8px;
-    float: left;
     height: 38px;
     font-size: 13px;
 }
@@ -662,13 +612,16 @@ tbody tr {
 }
 
 
-.image-wrapper,
-.image-wrapper > img {
-    margin-left: 10px;
-    border-radius: 50%;
-    float: left;
+.image-wrapper {
+    display: inline-block;
     height: 40px;
+    vertical-align: bottom;
     width: 40px;
+}
+
+.image-wrapper > img {
+    object-fit: cover;
+    border-radius: 50%;
 }
 
 #lomu_rating {
@@ -679,6 +632,7 @@ tbody tr {
     line-height: 44px;
     color: #FFFFFF;
     border-radius: 10px;
+    display: inline-block;
     margin-bottom: 15px;
 }
 
@@ -686,4 +640,7 @@ tbody tr {
     margin-top: 10px;
     border-top: 1px solid rgb(230, 230, 230);
     padding: 10px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
