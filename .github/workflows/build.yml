@@ -27,14 +27,24 @@ jobs:
       - name: Set executable permissions for gradlew
         run: chmod +x ./gradlew
 
-      - name: Configure Repositories
+      - name: Create Gradle Init Script
         run: |
-          if [ -f build.gradle.kts ]; then
-            sed -i '/maven(url/d' build.gradle.kts
-            sed -i 's/repositories {/repositories { mavenCentral();/g' build.gradle.kts
-          fi
+          cat <<EOF > init.gradle
+          allprojects {
+           repositories {
+               mavenCentral()
+               google()
+               maven { url 'https://jitpack.io' }
+           }
+          }
+          EOF 
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+
+      - name: Build with Gradle
+        run: ./gradlew build --init-script init.gradle
+
       - name: Build with Gradle
         run: ./gradlew build
       - name: Get Commit Message
