@@ -18,26 +18,21 @@ object PathUtils {
         return path
     }
 
+    fun getVideoPath(fileName: String): String {
+        val path = ReadWriteFile.currentPathFileName("video/$fileName")
+        createLastDir(path)
+        return path
+    }
+
     fun getImagePath(name: String): String {
         val path = ReadWriteFile.currentPathFileName("image/${name}.png")
         createLastDir(path)
         return path
     }
 
-
-    fun getEternalReturnNicknameImagePath(name: String): String {
-        ReadWriteFile.createCurrentDirs("image/eternal_return/nickname/${name}.jpg")
-        return ReadWriteFile.currentPathFileName("image/eternal_return/nickname/${name}.jpg")
-    }
-
-
-    fun getEternalReturnImagePath(name: String): String {
-        ReadWriteFile.createCurrentDirs("image/eternal_return/${name}")
-        return ReadWriteFile.currentPathFileName("image/eternal_return/${name}")
-    }
-
-    fun getEternalReturnDataImagePath(name: String): String {
-        ReadWriteFile.createCurrentDirs("image/eternal_return/data/${name}")
-        return ReadWriteFile.currentPathFileName("image/eternal_return/data/${name}")
+    fun getRenderPath(name: String): String {
+        val path = ReadWriteFile.currentPathFileName("render/${name}.png")
+        createLastDir(path)
+        return path
     }
 }

@@ -1,6 +1,6 @@
 package cn.luorenmu.listen
 
-import cn.luorenmu.action.commandProcess.OneBotCommandAllocator
+import cn.luorenmu.action.commandProcess.OneBotCommandRouter
 import cn.luorenmu.listen.entity.BotRole
 import cn.luorenmu.listen.entity.MessageSender
 import cn.luorenmu.listen.entity.MessageType
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component
 @Component
 @Shiro
 class GroupEventListen(
-    private val oneBotCommandAllocator: OneBotCommandAllocator,
+    private val oneBotCommandRouter: OneBotCommandRouter,
 ) {
 
     @GroupMessageHandler
@@ -44,6 +44,6 @@ class GroupEventListen(
         )
 
         // 指令
-        oneBotCommandAllocator.process(bot, messageSender)
+        oneBotCommandRouter.process(bot, messageSender)
     }
 }

@@ -14,7 +14,5 @@ data class LoMuProperties(
     @NestedConfigurationProperty
     val web: WebPoolConfig,
     @NestedConfigurationProperty
-    val eter: EternalReturnConfig,
-    @NestedConfigurationProperty
     val bot: BotConfig,
 )

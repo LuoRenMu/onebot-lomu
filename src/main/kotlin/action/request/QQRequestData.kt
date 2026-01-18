@@ -1,6 +1,6 @@
 package cn.luorenmu.action.request
 
-import cn.luorenmu.common.utils.HTTPRequestUtil
+import cn.luorenmu.action.request.api.PakeApi
 import cn.luorenmu.common.utils.ReadWriteFile
 import cn.luorenmu.exception.LoMuBotException
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -41,12 +41,17 @@ class QQRequestData {
             }
         }
 
-        val requestUrl = getAvatarUrlString(qq, 640)
+        var requestUrl: PakeApi = object : PakeApi(getAvatarUrlString(qq, 640)) {
+            override var baseUrl: String = ""
+        }
         try {
             val resp = HTTPRequestUtil.call(requestUrl)
             // 通过响应头判断是否存在当前分辨率图片
             if (resp.headers["Cache-Control"] == "no-cache") {
-                val resp = HTTPRequestUtil.call(requestUrl.substring(0, requestUrl.length - 3) + "100")
+                requestUrl = object : PakeApi(requestUrl.url.substring(0, requestUrl.url.length - 3) + "100") {
+                    override var baseUrl: String = ""
+                }
+                val resp = HTTPRequestUtil.call(requestUrl)
                 ReadWriteFile.writeStreamFile(avatarPath, ByteArrayInputStream(resp.bodyAsBytes()))
                 return avatarPath
             }

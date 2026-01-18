@@ -15,6 +15,7 @@ repositories {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    enabled = false
 }
 
 

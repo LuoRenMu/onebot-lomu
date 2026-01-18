@@ -1,6 +1,6 @@
 package cn.luorenmu.listen
 
-import cn.luorenmu.action.commandProcess.OneBotCommandAllocator
+import cn.luorenmu.action.commandProcess.OneBotCommandRouter
 import cn.luorenmu.config.external.LoMuProperties
 import cn.luorenmu.listen.entity.BotRole
 import cn.luorenmu.listen.entity.MessageSender
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component
 @Component
 @Shiro
 class PrivateEvenListen(
-    private val oneBotCommandAllocator: OneBotCommandAllocator,
+    private val oneBotCommandRouter: OneBotCommandRouter,
     private val loMuProperties: LoMuProperties,
 ) {
 
@@ -36,7 +36,7 @@ class PrivateEvenListen(
             bot.selfId
         )
         if (loMuProperties.bot.private) {
-            oneBotCommandAllocator.process(bot, messageSender)
+            oneBotCommandRouter.process(bot, messageSender)
         }
     }
 }

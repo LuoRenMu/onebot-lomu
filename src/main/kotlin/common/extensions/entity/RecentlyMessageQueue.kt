@@ -28,7 +28,7 @@ class RecentlyMessageQueue<T>(private val maxSize: Int = 20) {
      * 消息指针
      * 确定下一条消息存放的位置
      * !在队列没有被填满的情况下 指针的值为null
-     * 只有在队列被填满时指针才会开始从0开始移动
+     * 只有在队列被填满时指针才会从0开始移动
      */
     private val mapCurrentPoint: MutableMap<Long, Int> = mutableMapOf()
 

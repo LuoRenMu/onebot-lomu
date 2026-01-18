@@ -49,10 +49,6 @@ fun String.toPinYin(): String {
     return string.toString()
 }
 
-fun String.isImage(): Boolean {
-    return this.lowercase().contains("[CQ:image".lowercase())
-}
-
 
 fun String.getCQReplyMessageId(): String? {
     if (this.isCQReply()) {
@@ -61,16 +57,6 @@ fun String.getCQReplyMessageId(): String? {
     return null
 }
 
-fun String.getCQUrlStr(index: Int = 0): String? {
-    if (isImage()) {
-        val regex = """url=([^,]+)""".toRegex()
-        val matchResult = regex.findAll(this).toList()
-        if (matchResult.isNotEmpty()) {
-            return matchResult.getOrNull(index)?.groupValues?.get(1)
-        }
-    }
-    return null
-}
 
 fun String.getCQFileStr(index: Int = 0): String? {
     val regex = """file=([^,]+)""".toRegex()
@@ -91,29 +77,8 @@ fun String.getFileStr(index: Int = 0): String? {
 }
 
 
-fun String.isCQAt(): Boolean {
-    return this.lowercase().contains("[CQ:at".lowercase())
-}
-
-fun String.isAt(id: Long): Boolean {
-    return this.contains(MsgUtils.builder().at(id).build())
-}
-
 fun String.isCQReply(): Boolean {
-    return this.lowercase().contains("[CQ:reply".lowercase())
-}
-
-
-fun String.isCQStr(): Boolean {
-    return this.lowercase().contains("[CQ:".lowercase())
-}
-
-fun String.isCQJson(): Boolean {
-    return this.lowercase().contains("[CQ:json".lowercase())
-}
-
-fun String.isCQRecord(): Boolean {
-    return this.lowercase().contains("[CQ:record".lowercase())
+    return this.lowercase().contains("\\[CQ:reply,id=\\d+]".toRegex())
 }
 
 

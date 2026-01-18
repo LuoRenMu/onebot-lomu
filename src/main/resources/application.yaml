@@ -34,5 +34,3 @@ lomu:
     size: 2
   bot:
     private: false
-  eter:
-    teammate: 1
