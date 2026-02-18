@@ -14,7 +14,7 @@ interface CommandProcess {
      * @param sender
      * @return
      */
-    fun process(sender: MessageSender): String?
+    suspend fun process(sender: MessageSender): String?
 
     /**
      * 命令名称

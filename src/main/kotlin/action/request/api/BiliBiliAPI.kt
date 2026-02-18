@@ -31,11 +31,11 @@ sealed class BiliBiliAPI<T>(
         headers.putAll(
             mapOf(
                 "User-Agent" to
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
                 "Referer" to
                         "https://www.bilibili.com/",
                 "Origin" to
-                        "https://www.bilibili.com/"
+                        "https://www.bilibili.com/",
             )
         )
     }
@@ -67,7 +67,6 @@ sealed class BiliBiliAPI<T>(
                 val inputStream = call().bodyAsBytes().inputStream()
                 ReadWriteFile.writeStreamFile(outputPath, inputStream)
             }
-
         }
     }
 }

@@ -29,6 +29,11 @@ fun String.getAtQQ(i: Int = 0): String? {
         .getOrNull(i)?.groupValues?.get(1)
 }
 
+fun String.getAtQQAll(): List<Long> {
+    return "\\[CQ:at,qq=(\\d+)?+]".lowercase().toRegex().findAll(this.lowercase()).toMutableList()
+        .map { it.groupValues[1].toLong() }
+}
+
 fun String.replaceBlankToEmpty(): String {
     return this.replace(" ", "")
 }

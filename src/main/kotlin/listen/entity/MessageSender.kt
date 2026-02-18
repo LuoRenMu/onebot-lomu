@@ -1,8 +1,5 @@
 package cn.luorenmu.listen.entity
 
-import cn.luorenmu.common.extensions.replaceAtToEmpty
-import cn.luorenmu.common.extensions.replaceBlankToEmpty
-
 /**
  * @author LoMu
  * Date 2024.12.12 17:00
@@ -18,13 +15,7 @@ data class MessageSender(
     var botId: Long,
     // unlimited is true disregard role permissions limit
     var unlimited: Boolean = false,
-) {
-    fun originalMessage(command: Regex): String = message.replaceAtToEmpty(botId).trim()
-        .replace(command, "")
-        .replaceBlankToEmpty()
-        .lowercase()
-}
-
+)
 enum class MessageType(val type: String) {
     PRIVATE("private"), GROUP("group");
 

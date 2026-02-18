@@ -11,6 +11,7 @@ import com.mikuac.shiro.common.utils.MsgUtils
 import com.mikuac.shiro.core.Bot
 import com.mikuac.shiro.core.BotContainer
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.getBeansOfType
 import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Component
@@ -49,7 +50,7 @@ class OneBotCommandRouter(
                 originMessage.replace("\\[CQ:reply,id=\\d+]".toRegex(), "")
         }
 
-        return originMessage.matches(oneBotCommand.command())
+        return originMessage.contains(oneBotCommand.command())
     }
 
     private fun send(message: String?, id: Long, messageId: Int, type: MessageType) {
@@ -71,7 +72,7 @@ class OneBotCommandRouter(
             ?.let { oneBotCommand ->
                 try {
                     send(
-                        oneBotCommand.process(messageSender),
+                        runBlocking { oneBotCommand.process(messageSender) },
                         messageSender.groupOrSenderId,
                         messageSender.messageId,
                         messageSender.messageType

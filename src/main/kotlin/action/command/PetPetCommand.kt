@@ -24,7 +24,7 @@ class PetPetCommand(
     private val botContainer: BotContainer,
     private val qqRequestData: QQRequestData,
 ) : CommandProcess {
-    override fun process(sender: MessageSender): String? {
+    override suspend fun process(sender: MessageSender): String? {
         val templateName =
             sender.message.replaceAtToEmpty().replaceBlankToEmpty()
                 .replaceReplyToEmpty().replaceImageToEmpty()

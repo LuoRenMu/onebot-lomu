@@ -1,4 +1,4 @@
-package cn.luorenmu.config.file
+package cn.luorenmu.common.file
 
 import cn.luorenmu.common.utils.PathUtils
 import cn.luorenmu.common.utils.ReadWriteFile

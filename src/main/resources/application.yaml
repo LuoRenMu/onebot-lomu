@@ -31,6 +31,6 @@ lomu:
     # 是否显式页面信息 true为否
     headless: true
     # 池大小
-    size: 2
+    size: 1
   bot:
     private: false

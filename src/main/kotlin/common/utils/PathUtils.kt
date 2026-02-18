@@ -25,13 +25,13 @@ object PathUtils {
     }
 
     fun getImagePath(name: String): String {
-        val path = ReadWriteFile.currentPathFileName("image/${name}.png")
+        val path = ReadWriteFile.currentPathFileName("image/${name}")
         createLastDir(path)
         return path
     }
 
     fun getRenderPath(name: String): String {
-        val path = ReadWriteFile.currentPathFileName("render/${name}.png")
+        val path = ReadWriteFile.currentPathFileName("render/${name}")
         createLastDir(path)
         return path
     }

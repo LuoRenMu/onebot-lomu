@@ -19,7 +19,9 @@ import com.mikuac.shiro.core.BotContainer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.*
 import io.ktor.client.statement.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -37,43 +39,54 @@ class BilibiliListenCommand(
 ) : CommandProcess {
     private val bilibiliBVID = "BV1[0-9a-zA-Z]{9}"
 
-    private val bilibiliVideoShortLink = "((https://bili2233.cn/([a-zA-Z0-9]+))|(https://b23.tv/([a-zA-Z0-9]+)))"
+    private val bilibiliVideoShortLink = """(https:\\?/\\?/(?:bili2233\.cn|b23\.tv)\\?/([a-zA-Z0-9]+))"""
     private val log = KotlinLogging.logger { }
 
-    override fun process(sender: MessageSender): String? {
+    override suspend fun process(sender: MessageSender): String? {
         val correctMsg = sender.message.replace("\\", "")
         findBilibiliLinkBvid(correctMsg)?.let { bvid ->
             // 视频信息
-            val info = runBlocking { BiliBiliAPI.Info(bvid).execute() }.data.first()
+            val info = BiliBiliAPI.Info(bvid).execute().data.first()
             val videoPath = PathUtils.getVideoPath("bilibili/$bvid.flv")
             val videoPathCQ = MsgUtils.builder().video(videoPath, "").build()
             val limitTime = 15
             // 下载视频并发送
-            runBlocking {
-                BiliBiliAPI.BvidToCid(bvid).execute().let { videoStreamInfo ->
-                    val videoInfos =
-                        BiliBiliAPI.VideoSteam(videoStreamInfo.data.first().cid, bvid).execute().data.first()
-                    videoInfos.let {
-                        val minute = videoInfos.timelength / 1000 / 60
-                        val suffixMessage = if (minute > limitTime) "视频过长 不发送" else "视频准备发送中"
-                        val videoInfoStr =
-                            MsgUtils.builder().reply(sender.messageId).img(getVideoInfoImage(info)).text(suffixMessage)
-                                .build()
-                        botContainer.getFirstBot().sendMsg(
-                            sender.messageType, sender.groupOrSenderId,
-                            videoInfoStr
-                        )
-                        if (minute > limitTime) {
-                            return@runBlocking
+            BiliBiliAPI.BvidToCid(bvid).execute().let { videoStreamInfo ->
+                val videoInfos =
+                    BiliBiliAPI.VideoSteam(videoStreamInfo.data.first().cid, bvid).execute().data.first()
+                videoInfos.let {
+                    val minute = videoInfos.timelength / 1000 / 60
+                    supervisorScope {
+                        launch {
+                            if (minute <= limitTime) {
+                                if (!File(videoPath).exists()) {
+                                    try {
+                                        downloadVideo(videoInfos, videoPath)
+                                    } catch (e: Exception) {
+                                        log.error(e) { "视频下载失败" }
+                                        botContainer.getFirstBot().sendMsg(
+                                            sender.messageType, sender.groupOrSenderId,
+                                            "视频下载失败"
+                                        )
+                                    }
+                                }
+                                botContainer.getFirstBot().sendMsg(
+                                    sender.messageType, sender.groupOrSenderId,
+                                    videoPathCQ
+                                )
+                            }
                         }
-                        if (!File(videoPath).exists()) {
-                            downloadVideo(videoInfos, videoPath)
+                        launch {
+                            val suffixMessage = if (minute > limitTime) "视频超过${limitTime}分钟 不发送" else ""
+                            val videoInfoStr =
+                                MsgUtils.builder().reply(sender.messageId).img(getVideoInfoImage(info))
+                                    .text(suffixMessage)
+                                    .build()
+                            botContainer.getFirstBot().sendMsg(
+                                sender.messageType, sender.groupOrSenderId,
+                                videoInfoStr
+                            )
                         }
-
-                        botContainer.getFirstBot().sendMsg(
-                            sender.messageType, sender.groupOrSenderId,
-                            videoPathCQ
-                        )
                     }
                 }
             }
@@ -106,22 +119,21 @@ class BilibiliListenCommand(
                 avatar,
                 info.owner.name,
                 info.title,
-                info.desc
+                if (info.desc.length > 100) info.desc.substring(0, 100) + "..." else info.desc,
             )
         )
-        val page = PathUtils.getRenderPath("bilibili/${info.bvid}")
+        val page = PathUtils.getRenderPath("bilibili/${info.bvid}.html")
         ReadWriteFile.writeStreamFile(
             page, parse.toByteArray().inputStream()
         )
 
-        val render = PathUtils.getImagePath("bilibili/render/${info.bvid}")
+        val render = PathUtils.getImagePath("bilibili/render/${info.bvid}.png")
         webPool.getWebPageScreenshot().screenshotSelector(
             page,
             render,
             "#box"
         )
-
-        return MsgUtils.builder().img(render).build()
+        return render
     }
 
     private fun findBilibiliLinkBvid(message: String): String? {
@@ -155,7 +167,7 @@ class BilibiliListenCommand(
         try {
             videoInfos.let {
                 videoInfos.durl.firstOrNull()?.let { videoInfo ->
-                    BiliBiliAPI.Download.Video(videoInfo.url, outputPath)
+                    BiliBiliAPI.Download.Video(videoInfo.url, outputPath).execute()
                 }
             }
         } catch (e: Exception) {

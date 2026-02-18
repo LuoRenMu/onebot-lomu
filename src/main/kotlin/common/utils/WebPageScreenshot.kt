@@ -43,7 +43,7 @@ class WebPageScreenshot(headless: Boolean = true) {
         pageConsumer: (page: Page, box: BoundingBox) -> Unit,
     ) {
         synchronized(this) {
-            page.navigate(url, Page.NavigateOptions().setWaitUntil(waitUntilState).setTimeout(30000.0))
+            page.navigate(url, Page.NavigateOptions().setWaitUntil(waitUntilState).setTimeout(60000.0))
             val locator = page.locator(selector)
             val boundingBox = locator.boundingBox()
             pageConsumer(page, boundingBox)
@@ -58,7 +58,7 @@ class WebPageScreenshot(headless: Boolean = true) {
         pageConsumer: (page: Page) -> Unit = {},
     ) {
         synchronized(this) {
-            page.navigate(url, Page.NavigateOptions().setWaitUntil(waitUntilState).setTimeout(30000.0))
+            page.navigate(url, Page.NavigateOptions().setWaitUntil(waitUntilState).setTimeout(60000.0))
             val locator = page.locator(selector)
             val boundingBox = locator.boundingBox()
             pageConsumer(page)
@@ -78,7 +78,7 @@ class WebPageScreenshot(headless: Boolean = true) {
         pageConsumer: (page: Page) -> Unit = {},
     ) {
         synchronized(this) {
-            page.navigate(url, Page.NavigateOptions().setWaitUntil(waitUntilState).setTimeout(30000.0))
+            page.navigate(url, Page.NavigateOptions().setWaitUntil(waitUntilState).setTimeout(60000.0))
             pageConsumer(page)
             page.screenshot(
                 Page.ScreenshotOptions().setPath(Paths.get(output))

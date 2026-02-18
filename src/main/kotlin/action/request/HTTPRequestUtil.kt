@@ -48,9 +48,6 @@ object HTTPRequestUtil {
             val cacheFile = Files.createDirectories(Path(ReadWriteFile.currentPathFileName("/cache"))).toFile()
             publicStorage(FileStorage(cacheFile))
         }
-        install(HttpTimeout) {
-            requestTimeoutMillis = 10000
-        }
 
         defaultRequest {
             header(
@@ -70,10 +67,7 @@ object HTTPRequestUtil {
             return client.request {
                 url(requestEntity.url)
                 method = requestEntity.method
-                requestEntity.body.let { by ->
-                    setBody(by)
-                    header(HttpHeaders.ContentType, "application/json")
-                }
+
                 requestEntity.headers.let { reqHeaders ->
                     reqHeaders.forEach { h ->
                         header(h.key, h.value)
